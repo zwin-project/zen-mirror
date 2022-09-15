@@ -1,0 +1,29 @@
+== ZEN Oculus display system
+
+=== Basic environment setup
+
+This project is an Android project using the OpenXR Mobile SDK provided by
+Oculus. Follow the developer documentation for Oculus' OpenXR Mobile SDK to set
+up a basic environment.
+
+This will likely include,
+
+* Setting up Oculus Quest/Quest2 in developer mode.
+* Development environment for Android projects.
+* Download Oculus OpenXR Mobile SDK package
+
+=== Configuration files
+
+Place a file named `local.properties` in the root directories of this project
+and set the following items.
+
+* `sdk.dir`: Path to the Android SDK directory
+
+[source,property,title="local.properties"]
+----
+sdk.dir=/path/to/Android/sdk
+----
+
+=== Build & Run
+
+Use Android Studio to build and run, or do as you like.
