@@ -1,5 +1,15 @@
 == ZEN Oculus display system
 
+=== Clone
+
+Clone https://github.com/zigen-project/zen-oculus-display-system[this repository]
+with its submodules as well.
+
+[source,sh]
+```
+git clone https://github.com/zigen-project/zen-oculus-display-system.git --recursive
+```
+
 === Basic environment setup
 
 This project is an Android project using the OpenXR Mobile SDK provided by
@@ -17,11 +27,13 @@ This will likely include,
 Place a file named `local.properties` in the root directories of this project
 and set the following items.
 
-* `sdk.dir`: Path to the Android SDK directory
+* `sdk.dir`  : Path to the Android SDK directory
+* `cmake.dir`: (optional) Path to CMake direcory
 
 [source,property,title="local.properties"]
 ----
 sdk.dir=/path/to/Android/sdk
+cmake.dir=/path/to/Android/sdk/cmake/3.22.1
 ----
 
 === Build & Run
