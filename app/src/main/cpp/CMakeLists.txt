@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 project(zen_oculus_display_system C CXX)
 message(STATUS "Using CMake version: ${CMAKE_VERSION}")
@@ -19,6 +19,10 @@ add_library(
 # suppress warning
 target_compile_options(android_native_app_glue_object PRIVATE -w)
 
+set(Boost_DIR ${PROJECT_DIR}/build/boost)
+set(Boost_INCLUDE_DIR ${PROJECT_DIR}/build/boost/include)
+find_package(Boost REQUIRED)
+
 # main target
 add_library(
     zen_oculus_display_system MODULE
@@ -26,6 +30,7 @@ add_library(
     main.cpp
     $<TARGET_OBJECTS:android_native_app_glue_object>
 )
+target_precompile_headers(zen_oculus_display_system PRIVATE pch.h)
 
 target_link_libraries(
     zen_oculus_display_system
@@ -36,6 +41,7 @@ target_link_libraries(
 target_include_directories(
     zen_oculus_display_system
     PRIVATE ${android_native_app_glue_dir}
+    PRIVATE ${Boost_INCLUDE_DIRS}
 )
 
 # For development purpose
