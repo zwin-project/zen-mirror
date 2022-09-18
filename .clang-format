@@ -4,7 +4,6 @@ ColumnLimit: 80
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterFunction: true
-  AfterClass: true
   SplitEmptyRecord: false
 AlwaysBreakAfterReturnType: TopLevelDefinitions
 AlignAfterOpenBracket: DontAlign

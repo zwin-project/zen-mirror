@@ -19,15 +19,30 @@ add_library(
 # suppress warning
 target_compile_options(android_native_app_glue_object PRIVATE -w)
 
-set(Boost_DIR ${PROJECT_DIR}/build/boost)
-set(Boost_INCLUDE_DIR ${PROJECT_DIR}/build/boost/include)
-find_package(Boost REQUIRED)
+# Setup Boost
+set(Boost_VERSION 1.80.0)
+set(Boost_CMAKE_DIR "${PROJECT_DIR}/build/boost/lib/cmake")
+
+## Search for all available component-configuration directories
+file(GLOB all_components LIST_DIRECTORIES true 
+    RELATIVE "${Boost_CMAKE_DIR}" "${Boost_CMAKE_DIR}/boost_*-${Boost_VERSION}")
+## ...and extract components names from it.
+string(REGEX REPLACE "boost_([_a-z0-9]+)-${Boost_VERSION}" "\\1"
+    all_components "${all_components}")
+
+set(Boost_DIR "${Boost_CMAKE_DIR}/Boost-${Boost_VERSION}")
+foreach(component IN LISTS all_components)
+    set(boost_${component}_DIR "${Boost_CMAKE_DIR}/boost_${component}-${Boost_VERSION}")
+endforeach()
+
+find_package(Boost CONFIG REQUIRED)
 
 # main target
 add_library(
     zen_oculus_display_system MODULE
     
-    main.cpp
+    main.cc
+    logger-android.cc
     $<TARGET_OBJECTS:android_native_app_glue_object>
 )
 target_precompile_headers(zen_oculus_display_system PRIVATE pch.h)
