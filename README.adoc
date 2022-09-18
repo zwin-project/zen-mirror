@@ -28,11 +28,13 @@ Place a file named `local.properties` in the root directories of this project
 and set the following items.
 
 * `sdk.dir`  : Path to the Android SDK directory
-* `cmake.dir`: (optional) Path to CMake direcory
+* `ovr_openxr_mobile_sdk.dir`: Path to the Oculus OpenXR Mobile SDK directory
+* `cmake.dir`: (optional) Path to CMake direcory you want to use
 
 [source,property,title="local.properties"]
 ----
 sdk.dir=/path/to/Android/sdk
+ovr_openxr_mobile_sdk.dir=/path/to/ovr_openxr_mobile_sdk_42.0
 cmake.dir=/path/to/Android/sdk/cmake/3.22.1
 ----
 

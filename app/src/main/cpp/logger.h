@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common.h"
+
 namespace zen::display_system::oculus {
 
 struct ILogger {
@@ -15,6 +17,8 @@ struct ILogger {
     SILENT,     // for internal use only.
   } Severity;
 
+  DISABLE_MOVE_AND_COPY(ILogger);
+  ILogger() = default;
   virtual ~ILogger() = default;
 
   virtual void Print(Severity severity, const char* pretty_function,
