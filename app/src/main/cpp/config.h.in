@@ -1,0 +1,7 @@
+#pragma once
+
+namespace zen::display_system::oculus::config {
+
+constexpr const char* APP_NAME = "${APP_NAME}";
+
+}  // namespace zen::display_system::oculus::config

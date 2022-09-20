@@ -25,7 +25,8 @@ android {
 
             def ccFlags = [
                 '-Werror', '-Wall', '-Winvalid-pch', '-Wextra', '-Wpedantic',
-                '-Wno-gnu-zero-variadic-macro-arguments'
+                '-Wno-gnu-zero-variadic-macro-arguments',
+                '-Wno-missing-field-initializers'
             ]
 
             ndk {
@@ -35,7 +36,8 @@ android {
             cmake {
                 arguments "-DPROJECT_DIR:STRING=${projectDir}",
                     "-DROOT_PROJECT_DIR:STRING=${rootProject.projectDir}",
-                    "-DOVR_OPENXR_MOBILE_SDK_DIR:STRING=${ovrOpenXrMobileSdkDir}"
+                    "-DOVR_OPENXR_MOBILE_SDK_DIR:STRING=${ovrOpenXrMobileSdkDir}",
+                    "-DAPP_NAME:STRING=${rootProject.getName()}"
                 cppFlags += ccFlags + ['-std=c++17']
                 cFlags   += ccFlags + ['-std=c11']
             }

@@ -8,3 +8,6 @@
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
 #include <openxr/openxr_reflection.h>
+#include <sstream>
+#include <string>
+#include <vector>

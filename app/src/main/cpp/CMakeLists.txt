@@ -6,6 +6,11 @@ message(STATUS "Using CMake version: ${CMAKE_VERSION}")
 add_definitions(-DXR_USE_PLATFORM_ANDROID)
 add_definitions(-DXR_USE_GRAPHICS_API_OPENGL_ES)
 
+configure_file(
+    ${CMAKE_CURRENT_LIST_DIR}/config.h.in 
+    ${CMAKE_CURRENT_BINARY_DIR}/include/config.h
+)
+
 # android
 find_path(
     android_native_app_glue_dir 
@@ -86,6 +91,7 @@ target_include_directories(
     PRIVATE ${ROOT_PROJECT_DIR}/3rdParty/OpenXR-SDK/include
     PRIVATE ${android_native_app_glue_dir}
     PRIVATE ${Boost_INCLUDE_DIRS}
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include/
 )
 
 # For development purpose
