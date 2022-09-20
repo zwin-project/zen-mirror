@@ -1,20 +1,39 @@
 #pragma once
 
 #include "common.h"
+#include "openxr-context.h"
 
 namespace zen::display_system::oculus {
 
-struct OpenXRProgram {
+class OpenXRProgram {
+ public:
   DISABLE_MOVE_AND_COPY(OpenXRProgram);
-  OpenXRProgram(struct android_app *app) : app_(app){};
+  OpenXRProgram() = default;
   ~OpenXRProgram() = default;
 
-  bool Initialize() const;
+  /* Initialize the OpenXR loader */
+  bool InitializeLoader(struct android_app *app) const;
+
+  /* Initialize OpenXRContext */
+  bool InitializeContext(const std::unique_ptr<OpenXRContext> &context,
+      struct android_app *app) const;
 
  private:
-  bool InitializeLoader() const;
+  /* Create a new XrInstance and store it in the context */
+  bool InitializeInstance(const std::unique_ptr<OpenXRContext> &context,
+      struct android_app *app) const;
 
-  struct android_app *app_;
+  /* Write out XrInstance info */
+  void LogInstanceInfo(const std::unique_ptr<OpenXRContext> &context) const;
+
+  /** Write out
+   * - non-layer extensions
+   * - available layers' information and their extensions
+   **/
+  void LogLayersAndExtensions() const;
+
+  /* Convert XrVersion to a human readable version string */
+  std::string GetXrVersionString(XrVersion version) const;
 };
 
 }  // namespace zen::display_system::oculus

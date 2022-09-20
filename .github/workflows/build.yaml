@@ -1,0 +1,44 @@
+name: Lint & Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint-build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone Oculus OpenXR SDK (private)
+        uses: actions/checkout@v2
+        with:
+          repository: zigen-project/oculus-openxr-mobile-sdk
+          ssh-key: ${{ secrets.DEPLOY_KEY_OCULUS_OPENXR_MOBILE_SDK }}
+          path: ovr_openxr_mobile_sdk
+      
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          path: main
+
+      - name: ClangFormat Check
+        run: find . -regex "^\.\/app/src/main/cpp/.*\.\(h\|cpp\)" | xargs clang-format-14 --dry-run -Werror
+        working-directory: ./main
+
+      - name: Gradle build
+        run: |
+          echo "ovr_openxr_mobile_sdk.dir=$GITHUB_WORKSPACE/ovr_openxr_mobile_sdk" > local.properties
+          ./gradlew build
+        working-directory: ./main
+
+      - name: Upload results Artifact
+        uses: actions/upload-artifact@v2
+        if: success() || failure()
+        with:
+          name: results
+          path: |
+            **/build/reports/lint-results-*.html
+            **/build/reports/lint-results-*.xml
+          if-no-files-found: error
+          retention-days: 14

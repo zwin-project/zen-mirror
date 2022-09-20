@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "logger.h"
+#include "openxr-context.h"
 #include "openxr-program.h"
 
 using namespace zen::display_system::oculus;
@@ -15,9 +16,18 @@ android_main(struct android_app *app)
     InitializeLogger();
     LOG_DEBUG("Boost Version %d", BOOST_VERSION);
 
-    auto program = std::make_unique<OpenXRProgram>(app);
+    auto openxr_context = std::make_unique<OpenXRContext>();
+    auto openxr = std::make_unique<OpenXRProgram>();
 
-    if (!program->Initialize()) LOG_ERROR("Failed to initialize the program");
+    if (!openxr->InitializeLoader(app)) {
+      LOG_ERROR("Failed to initialize OpenXR loader");
+      return;
+    }
+
+    if (!openxr->InitializeContext(openxr_context, app)) {
+      LOG_ERROR("Failed to initialize OpenXR context");
+      return;
+    }
 
     app->activity->vm->DetachCurrentThread();
   } catch (const std::exception &e) {
