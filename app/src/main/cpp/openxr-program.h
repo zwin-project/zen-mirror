@@ -26,6 +26,10 @@ class OpenXRProgram {
   /* Get a XrSystem and store it in the context */
   bool InitializeSystem(const std::unique_ptr<OpenXRContext> &context) const;
 
+  /* Initialize EGL context and check OpenGL ES version */
+  bool InitializeGraphicsLibrary(
+      const std::unique_ptr<OpenXRContext> &context) const;
+
   /* Write out available view configurations, determine the view config type
    * to use and store it in the context */
   bool InitializeViewConfig(

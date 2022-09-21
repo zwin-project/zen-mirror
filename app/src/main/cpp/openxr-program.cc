@@ -86,6 +86,8 @@ OpenXRProgram::InitializeContext(const std::unique_ptr<OpenXRContext> &context,
 
   if (!InitializeEnvironmentBlendMode(context)) return false;
 
+  if (!InitializeGraphicsLibrary(context)) return false;
+
   return true;
 }
 
@@ -136,6 +138,58 @@ OpenXRProgram::InitializeSystem(
 
   LOG_DEBUG("Using system %" PRIu64 " for form factor %s", context->system_id,
       to_string(kFormFactor));
+
+  return true;
+}
+
+bool
+OpenXRProgram::InitializeGraphicsLibrary(
+    [[maybe_unused]] const std::unique_ptr<OpenXRContext> &context) const
+{
+  PFN_xrGetOpenGLESGraphicsRequirementsKHR
+      xrGetOpenGLESGraphicsRequirementsKHR = nullptr;
+  IF_XR_FAILED (err, xrGetInstanceProcAddr(context->instance,
+                         "xrGetOpenGLESGraphicsRequirementsKHR",
+                         reinterpret_cast<PFN_xrVoidFunction *>(
+                             &xrGetOpenGLESGraphicsRequirementsKHR))) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  XrGraphicsRequirementsOpenGLESKHR graphicsRequirements{
+      XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR};
+  IF_XR_FAILED (err, xrGetOpenGLESGraphicsRequirementsKHR(context->instance,
+                         context->system_id, &graphicsRequirements)) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  context->egl = std::make_unique<EglInstance>();
+  if (!context->egl->Initialize()) {
+    LOG_ERROR("Failed to initialize EGL context");
+    return false;
+  }
+
+  GLint gl_major_version, gl_minor_version;
+  glGetIntegerv(GL_MAJOR_VERSION, &gl_major_version);
+  glGetIntegerv(GL_MINOR_VERSION, &gl_minor_version);
+
+  const XrVersion gl_version =
+      XR_MAKE_VERSION(gl_major_version, gl_minor_version, 0);
+  if (graphicsRequirements.minApiVersionSupported > gl_version ||
+      graphicsRequirements.maxApiVersionSupported < gl_version) {
+    LOG_ERROR(
+        "OpenGL ES Version not supported\n"
+        "    Using: %d.%d\n"
+        "    Required: %s - %s",
+        gl_major_version, gl_minor_version,
+        GetXrVersionString(graphicsRequirements.minApiVersionSupported).c_str(),
+        GetXrVersionString(graphicsRequirements.maxApiVersionSupported)
+            .c_str());
+    return false;
+  }
+
+  LOG_INFO("Using OpenGLES %d.%d", gl_major_version, gl_minor_version);
 
   return true;
 }
