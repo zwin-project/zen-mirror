@@ -26,6 +26,7 @@ namespace {
 // Create other to_string function on demand
 MAKE_TO_STRING_FUNC(XrEnvironmentBlendMode);
 MAKE_TO_STRING_FUNC(XrFormFactor);
+MAKE_TO_STRING_FUNC(XrReferenceSpaceType);
 MAKE_TO_STRING_FUNC(XrResult);
 MAKE_TO_STRING_FUNC(XrViewConfigurationType);
 
@@ -89,6 +90,8 @@ OpenXRProgram::InitializeContext(const std::unique_ptr<OpenXRContext> &context,
   if (!InitializeGraphicsLibrary(context)) return false;
 
   if (!InitializeSession(context)) return false;
+
+  LogReferenceSpaces(context);
 
   return true;
 }
@@ -363,6 +366,33 @@ OpenXRProgram::InitializeEnvironmentBlendMode(
   }
 
   return true;
+}
+
+void
+OpenXRProgram::LogReferenceSpaces(
+    const std::unique_ptr<OpenXRContext> &context) const
+{
+  CHECK(context->session != XR_NULL_HANDLE);
+
+  uint32_t space_count;
+  IF_XR_FAILED (err,
+      xrEnumerateReferenceSpaces(context->session, 0, &space_count, nullptr)) {
+    LOG_WARN("%s", err.c_str());
+    return;
+  }
+
+  std::vector<XrReferenceSpaceType> spaces(space_count);
+
+  IF_XR_FAILED (err, xrEnumerateReferenceSpaces(context->session, space_count,
+                         &space_count, spaces.data())) {
+    LOG_WARN("%s", err.c_str());
+    return;
+  }
+
+  LOG_DEBUG("Available reference spaces: %d", space_count);
+  for (auto space : spaces) {
+    LOG_DEBUG("    Name: %s", to_string(space));
+  }
 }
 
 void

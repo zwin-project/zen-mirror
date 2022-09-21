@@ -43,6 +43,9 @@ class OpenXRProgram {
   bool InitializeEnvironmentBlendMode(
       const std::unique_ptr<OpenXRContext> &context) const;
 
+  /* Write out reference spaces */
+  void LogReferenceSpaces(const std::unique_ptr<OpenXRContext> &context) const;
+
   /* Write out XrInstance info */
   void LogInstanceInfo(const std::unique_ptr<OpenXRContext> &context) const;
 
