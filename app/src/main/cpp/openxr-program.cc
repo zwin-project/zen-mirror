@@ -126,7 +126,7 @@ OpenXRProgram::InitializeSystem(
     const std::unique_ptr<OpenXRContext> &context) const
 {
   CHECK(context->system_id == XR_NULL_SYSTEM_ID);
-  const XrFormFactor kFormFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
+  constexpr XrFormFactor kFormFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
 
   XrSystemGetInfo system_info{XR_TYPE_SYSTEM_GET_INFO};
   system_info.formFactor = kFormFactor;

@@ -12,9 +12,9 @@ struct OpenXRContext {
 
   std::unique_ptr<EglInstance> egl;
 
-  static const XrViewConfigurationType kAcceptableViewConfigType =
+  static constexpr XrViewConfigurationType kAcceptableViewConfigType =
       XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
-  static const XrEnvironmentBlendMode kAcceptableEnvironmentBlendModeType =
+  static constexpr XrEnvironmentBlendMode kAcceptableEnvironmentBlendModeType =
       XR_ENVIRONMENT_BLEND_MODE_OPAQUE;
 };
 

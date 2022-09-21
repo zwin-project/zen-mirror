@@ -91,7 +91,7 @@ EglInstance::Initialize()
     }
 
     // clang-format off
-    const EGLint config_attribs[] = {
+    constexpr EGLint config_attribs[] = {
         EGL_RED_SIZE,       8,
         EGL_GREEN_SIZE,     8,
         EGL_BLUE_SIZE,      8,
@@ -106,13 +106,12 @@ EglInstance::Initialize()
     for (int i = 0; i < num_configs; i++) {
       EGLint value = 0;
       eglGetConfigAttrib(display_, configs[i], EGL_RENDERABLE_TYPE, &value);
-      if ((value & EGL_OPENGL_ES3_BIT) != EGL_OPENGL_ES3_BIT) {
+      if (!(value & EGL_OPENGL_ES3_BIT)) {
         continue;
       }
 
       eglGetConfigAttrib(display_, configs[i], EGL_SURFACE_TYPE, &value);
-      if ((value & (EGL_WINDOW_BIT | EGL_PBUFFER_BIT)) !=
-          (EGL_WINDOW_BIT | EGL_PBUFFER_BIT)) {
+      if (!(value & EGL_WINDOW_BIT) || !(value & EGL_PBUFFER_BIT)) {
         continue;
       }
 
@@ -136,7 +135,7 @@ EglInstance::Initialize()
   }
 
   // clang-format off
-  EGLint context_attribs[] = {
+  constexpr EGLint context_attribs[] = {
       EGL_CONTEXT_CLIENT_VERSION, 3,
       EGL_NONE,
   };
@@ -150,7 +149,7 @@ EglInstance::Initialize()
   }
 
   // clang-format off
-  const EGLint surface_attribs[] = {
+  constexpr EGLint surface_attribs[] = {
       EGL_WIDTH,  16,
       EGL_HEIGHT, 16,
       EGL_NONE,
