@@ -24,8 +24,10 @@ namespace {
   }
 
 // Create other to_string function on demand
-MAKE_TO_STRING_FUNC(XrResult);
+MAKE_TO_STRING_FUNC(XrEnvironmentBlendMode);
 MAKE_TO_STRING_FUNC(XrFormFactor);
+MAKE_TO_STRING_FUNC(XrResult);
+MAKE_TO_STRING_FUNC(XrViewConfigurationType);
 
 std::string
 CheckXrResult(XrResult res, const char *originator, const char *source_location)
@@ -80,6 +82,10 @@ OpenXRProgram::InitializeContext(const std::unique_ptr<OpenXRContext> &context,
 
   if (!InitializeSystem(context)) return false;
 
+  if (!InitializeViewConfig(context)) return false;
+
+  if (!InitializeEnvironmentBlendMode(context)) return false;
+
   return true;
 }
 
@@ -130,6 +136,148 @@ OpenXRProgram::InitializeSystem(
 
   LOG_DEBUG("Using system %" PRIu64 " for form factor %s", context->system_id,
       to_string(kFormFactor));
+
+  return true;
+}
+
+bool
+OpenXRProgram::InitializeViewConfig(
+    const std::unique_ptr<OpenXRContext> &context) const
+{
+  CHECK(context->instance != XR_NULL_HANDLE);
+  CHECK(context->system_id != XR_NULL_SYSTEM_ID);
+  bool acceptableConfigTypeFound = false;
+
+  uint32_t view_config_type_count;
+  IF_XR_FAILED (err,
+      xrEnumerateViewConfigurations(context->instance, context->system_id, 0,
+          &view_config_type_count, nullptr)) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  std::vector<XrViewConfigurationType> view_config_types(
+      view_config_type_count);
+
+  IF_XR_FAILED (err, xrEnumerateViewConfigurations(context->instance,
+                         context->system_id, view_config_type_count,
+                         &view_config_type_count, view_config_types.data())) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  LOG_DEBUG("Available View Configuration Types: (%d)", view_config_type_count);
+  for (auto view_config_type : view_config_types) {
+    if (view_config_type == OpenXRContext::kAcceptableViewConfigType) {
+      context->view_configuration_type = view_config_type;
+      acceptableConfigTypeFound = true;
+    }
+
+    LOG_DEBUG("  View Configuration Type: %s %s", to_string(view_config_type),
+        view_config_type == OpenXRContext::kAcceptableViewConfigType
+            ? "(selected)"
+            : "");
+
+    XrViewConfigurationProperties view_config_props{
+        XR_TYPE_VIEW_CONFIGURATION_PROPERTIES};
+    IF_XR_FAILED (err,
+        xrGetViewConfigurationProperties(context->instance, context->system_id,
+            view_config_type, &view_config_props)) {
+      LOG_WARN("%s", err.c_str());
+      continue;
+    }
+
+    LOG_DEBUG("  View Configuration FovMutable: %s",
+        view_config_props.fovMutable == XR_TRUE ? "True" : "False");
+
+    uint32_t view_count;
+    IF_XR_FAILED (err,
+        xrEnumerateViewConfigurationViews(context->instance, context->system_id,
+            view_config_type, 0, &view_count, nullptr)) {
+      LOG_WARN("%s", err.c_str());
+      continue;
+    }
+
+    if (view_count > 0) {
+      std::vector<XrViewConfigurationView> views(
+          view_count, {XR_TYPE_VIEW_CONFIGURATION_VIEW});
+      IF_XR_FAILED (err, xrEnumerateViewConfigurationViews(context->instance,
+                             context->system_id, view_config_type, view_count,
+                             &view_count, views.data())) {
+        LOG_WARN("%s", err.c_str());
+        continue;
+      }
+
+      for (uint32_t i = 0; i < views.size(); i++) {
+        const XrViewConfigurationView &view = views[i];
+        LOG_DEBUG(
+            "    View [%d]: Recommended Width=%d Height=%d SampleCount=%d", i,
+            view.recommendedImageRectWidth, view.recommendedImageRectHeight,
+            view.recommendedSwapchainSampleCount);
+        LOG_DEBUG("    View [%d]: Maximum Width=%d Height=%d SampleCount=%d", i,
+            view.maxImageRectWidth, view.maxImageRectHeight,
+            view.maxSwapchainSampleCount);
+      }
+    } else {
+      LOG_WARN("Empty view configuration type");
+    }
+  }
+
+  if (acceptableConfigTypeFound == false) {
+    LOG_ERROR("Failed to find an acceptable view configuration type");
+    return false;
+  }
+
+  return true;
+}
+
+bool
+OpenXRProgram::InitializeEnvironmentBlendMode(
+    const std::unique_ptr<OpenXRContext> &context) const
+{
+  CHECK(context->instance != XR_NULL_HANDLE);
+  CHECK(context->system_id != XR_NULL_SYSTEM_ID);
+  CHECK(context->view_configuration_type ==
+        OpenXRContext::kAcceptableViewConfigType);
+  bool acceptable_blend_mode_found = false;
+
+  uint32_t count;
+  IF_XR_FAILED (err,
+      xrEnumerateEnvironmentBlendModes(context->instance, context->system_id,
+          context->view_configuration_type, 0, &count, nullptr)) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  std::vector<XrEnvironmentBlendMode> blend_modes(count);
+
+  IF_XR_FAILED (err, xrEnumerateEnvironmentBlendModes(context->instance,
+                         context->system_id, context->view_configuration_type,
+                         count, &count, blend_modes.data())) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  LOG_DEBUG("Available Environment Blend Modes for %s: (%d)",
+      to_string(context->view_configuration_type), count);
+  for (uint32_t i = 0; i < count; i++) {
+    auto mode = blend_modes[i];
+    if (mode == OpenXRContext::kAcceptableEnvironmentBlendModeType) {
+      context->environment_blend_mode =
+          OpenXRContext::kAcceptableEnvironmentBlendModeType;
+      acceptable_blend_mode_found = true;
+    }
+
+    LOG_DEBUG("    Mode [%u]: %s %s", i, to_string(mode),
+        mode == OpenXRContext::kAcceptableEnvironmentBlendModeType
+            ? "(selected)"
+            : "");
+  }
+
+  if (acceptable_blend_mode_found == false) {
+    LOG_ERROR("Failed to find an acceptable blend mode");
+    return false;
+  }
 
   return true;
 }
