@@ -46,6 +46,32 @@ CheckXrResult(XrResult res, const char *originator, const char *source_location)
 #define IF_XR_FAILED(err, cmd) \
   if (std::string err = CheckXrResult(cmd, #cmd, FILE_AND_LINE); !err.empty())
 
+namespace Math {
+
+XrQuaternionf
+ToXrQuaternionf(glm::quat orientation)
+{
+  return XrQuaternionf{
+      orientation.x, orientation.y, orientation.z, orientation.w};
+}
+
+XrVector3f
+ToXrVector3f(glm::vec3 position)
+{
+  return XrVector3f{position.x, position.y, position.z};
+}
+
+XrPosef
+ToXrPosef(glm::vec3 position, glm::quat orientation)
+{
+  return XrPosef{
+      ToXrQuaternionf(orientation),
+      ToXrVector3f(position),
+  };
+}
+
+}  // namespace Math
+
 }  // namespace
 
 bool
@@ -92,6 +118,8 @@ OpenXRProgram::InitializeContext(const std::unique_ptr<OpenXRContext> &context,
   if (!InitializeSession(context)) return false;
 
   LogReferenceSpaces(context);
+
+  if (!InitializeAppSpace(context)) return false;
 
   return true;
 }
@@ -219,6 +247,30 @@ OpenXRProgram::InitializeSession(
   session_create_info.systemId = context->system_id;
   IF_XR_FAILED (err, xrCreateSession(context->instance, &session_create_info,
                          &context->session)) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  return true;
+}
+
+bool
+OpenXRProgram::InitializeAppSpace(
+    [[maybe_unused]] const std::unique_ptr<OpenXRContext> &context) const
+{
+  CHECK(context->session != XR_NULL_HANDLE);
+
+  glm::vec3 position(0, 0, 0);
+  glm::quat orientation(0, 0, 0, 1);
+  XrReferenceSpaceCreateInfo reference_space_create_info{
+      XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
+  reference_space_create_info.poseInReferenceSpace =
+      Math::ToXrPosef(position, orientation);
+  reference_space_create_info.referenceSpaceType =
+      XR_REFERENCE_SPACE_TYPE_STAGE;
+
+  IF_XR_FAILED (err, xrCreateReferenceSpace(context->session,
+                         &reference_space_create_info, &context->app_space)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }

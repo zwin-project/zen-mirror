@@ -7,6 +7,8 @@
 #include <android_native_app_glue.h>
 #include <boost/version.hpp>
 #include <cinttypes>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/vec3.hpp>
 #include <memory>
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
