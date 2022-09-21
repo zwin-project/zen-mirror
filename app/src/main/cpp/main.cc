@@ -29,6 +29,7 @@ android_main(struct android_app *app)
       return;
     }
 
+    // TODO: Initialize actions
     // TODO: Register Debug Message Callback for OpenGL
 
     app->activity->vm->DetachCurrentThread();

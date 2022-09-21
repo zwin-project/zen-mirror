@@ -6,6 +6,8 @@ message(STATUS "Using CMake version: ${CMAKE_VERSION}")
 add_definitions(-DXR_USE_PLATFORM_ANDROID)
 add_definitions(-DXR_USE_GRAPHICS_API_OPENGL_ES)
 
+add_subdirectory(${ROOT_PROJECT_DIR}/3rdParty/glm binary_dir)
+
 configure_file(
     ${CMAKE_CURRENT_LIST_DIR}/config.h.in 
     ${CMAKE_CURRENT_BINARY_DIR}/include/config.h
@@ -80,6 +82,7 @@ target_link_libraries(
     zen_oculus_display_system
 
     openxr_loader
+    glm
     ${android_library}
     ${android_log_library}
     ${egl_library}
