@@ -88,6 +88,8 @@ OpenXRProgram::InitializeContext(const std::unique_ptr<OpenXRContext> &context,
 
   if (!InitializeGraphicsLibrary(context)) return false;
 
+  if (!InitializeSession(context)) return false;
+
   return true;
 }
 
@@ -190,6 +192,33 @@ OpenXRProgram::InitializeGraphicsLibrary(
   }
 
   LOG_INFO("Using OpenGLES %d.%d", gl_major_version, gl_minor_version);
+
+  return true;
+}
+
+bool
+OpenXRProgram::InitializeSession(
+    const std::unique_ptr<OpenXRContext> &context) const
+{
+  CHECK(context->instance != XR_NULL_HANDLE);
+  CHECK(context->system_id != XR_NULL_SYSTEM_ID);
+
+  XrSessionCreateInfo session_create_info{XR_TYPE_SESSION_CREATE_INFO};
+
+  XrGraphicsBindingOpenGLESAndroidKHR graphics_binding{
+      XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR};
+  graphics_binding.display = context->egl->display();
+  graphics_binding.config = (EGLConfig)0;
+  graphics_binding.context = context->egl->context();
+
+  session_create_info.next =
+      reinterpret_cast<XrBaseInStructure *>(&graphics_binding);
+  session_create_info.systemId = context->system_id;
+  IF_XR_FAILED (err, xrCreateSession(context->instance, &session_create_info,
+                         &context->session)) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
 
   return true;
 }

@@ -7,6 +7,7 @@ namespace zen::display_system::oculus {
 struct OpenXRContext {
   XrInstance instance{XR_NULL_HANDLE};
   XrSystemId system_id{XR_NULL_SYSTEM_ID};
+  XrSession session{XR_NULL_HANDLE};
   XrViewConfigurationType view_configuration_type{};
   XrEnvironmentBlendMode environment_blend_mode{};
 
