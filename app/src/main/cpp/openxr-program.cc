@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "common.h"
 #include "config.h"
 #include "logger.h"
 #include "openxr-program.h"
@@ -24,10 +25,7 @@ namespace {
 
 // Create other to_string function on demand
 MAKE_TO_STRING_FUNC(XrResult);
-
-#define TO_STRING(x) #x
-#define MACRO_TO_STRING(x) TO_STRING(x)
-#define FILE_AND_LINE __FILE__ ":" MACRO_TO_STRING(__LINE__)
+MAKE_TO_STRING_FUNC(XrFormFactor);
 
 std::string
 CheckXrResult(XrResult res, const char *originator, const char *source_location)
@@ -36,7 +34,7 @@ CheckXrResult(XrResult res, const char *originator, const char *source_location)
   if (XR_FAILED(res)) {
     err << "XrResult failure [" << to_string(res) << "]" << std::endl;
     err << "    Origin: " << originator << std::endl;
-    err << std::string() << "    Source: " << source_location;
+    err << "    Source: " << source_location;
   }
 
   return err.str();
@@ -80,6 +78,8 @@ OpenXRProgram::InitializeContext(const std::unique_ptr<OpenXRContext> &context,
 
   LogInstanceInfo(context);
 
+  if (!InitializeSystem(context)) return false;
+
   return true;
 }
 
@@ -113,11 +113,32 @@ OpenXRProgram::InitializeInstance(const std::unique_ptr<OpenXRContext> &context,
   return true;
 }
 
+bool
+OpenXRProgram::InitializeSystem(
+    const std::unique_ptr<OpenXRContext> &context) const
+{
+  CHECK(context->system_id == XR_NULL_SYSTEM_ID);
+  const XrFormFactor kFormFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
+
+  XrSystemGetInfo system_info{XR_TYPE_SYSTEM_GET_INFO};
+  system_info.formFactor = kFormFactor;
+  IF_XR_FAILED (err,
+      xrGetSystem(context->instance, &system_info, &context->system_id)) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  LOG_DEBUG("Using system %" PRIu64 " for form factor %s", context->system_id,
+      to_string(kFormFactor));
+
+  return true;
+}
+
 void
 OpenXRProgram::LogInstanceInfo(
     const std::unique_ptr<OpenXRContext> &context) const
 {
-  assert(context->instance != XR_NULL_HANDLE);
+  CHECK(context->instance != XR_NULL_HANDLE);
 
   XrInstanceProperties instanceProperties{XR_TYPE_INSTANCE_PROPERTIES};
   IF_XR_FAILED (err,

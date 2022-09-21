@@ -4,6 +4,7 @@
 #include <android/log.h>
 #include <android_native_app_glue.h>
 #include <boost/version.hpp>
+#include <cinttypes>
 #include <memory>
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
