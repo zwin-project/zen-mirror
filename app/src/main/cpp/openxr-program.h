@@ -30,6 +30,9 @@ class OpenXRProgram {
   bool InitializeGraphicsLibrary(
       const std::unique_ptr<OpenXRContext> &context) const;
 
+  /* Create a new XrSession and store it in the context */
+  bool InitializeSession(const std::unique_ptr<OpenXRContext> &context) const;
+
   /* Write out available view configurations, determine the view config type
    * to use and store it in the context */
   bool InitializeViewConfig(
