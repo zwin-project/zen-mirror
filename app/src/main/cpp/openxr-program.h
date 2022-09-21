@@ -23,6 +23,9 @@ class OpenXRProgram {
   bool InitializeInstance(const std::unique_ptr<OpenXRContext> &context,
       struct android_app *app) const;
 
+  /* Get a XrSystem and store it in the context */
+  bool InitializeSystem(const std::unique_ptr<OpenXRContext> &context) const;
+
   /* Write out XrInstance info */
   void LogInstanceInfo(const std::unique_ptr<OpenXRContext> &context) const;
 
