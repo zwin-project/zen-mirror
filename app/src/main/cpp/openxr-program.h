@@ -26,6 +26,16 @@ class OpenXRProgram {
   /* Get a XrSystem and store it in the context */
   bool InitializeSystem(const std::unique_ptr<OpenXRContext> &context) const;
 
+  /* Write out available view configurations, determine the view config type
+   * to use and store it in the context */
+  bool InitializeViewConfig(
+      const std::unique_ptr<OpenXRContext> &context) const;
+
+  /* Write out available environment blend modes, determine the blend mode to
+   * use and store it in the context */
+  bool InitializeEnvironmentBlendMode(
+      const std::unique_ptr<OpenXRContext> &context) const;
+
   /* Write out XrInstance info */
   void LogInstanceInfo(const std::unique_ptr<OpenXRContext> &context) const;
 
