@@ -12,4 +12,6 @@ IncludeCategories:
     Priority: 0
   - Regex: '.*'
     Priority: 1
-IfMacros: ['IF_XR_FAILED']
+IfMacros: 
+  - IF_XR_FAILED
+  - IF_EGL_FAILED

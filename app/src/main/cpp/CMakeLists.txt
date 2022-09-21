@@ -68,6 +68,7 @@ find_package(Boost CONFIG REQUIRED)
 add_library(
     zen_oculus_display_system MODULE
     
+    egl-instance.cc
     logger-android.cc
     main.cc
     openxr-program.cc

@@ -29,6 +29,8 @@ android_main(struct android_app *app)
       return;
     }
 
+    // TODO: Register Debug Message Callback for OpenGL
+
     app->activity->vm->DetachCurrentThread();
   } catch (const std::exception &e) {
     LOG_ERROR("%s", e.what());
