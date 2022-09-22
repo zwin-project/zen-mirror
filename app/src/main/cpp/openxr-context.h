@@ -18,7 +18,7 @@ struct OpenXRContext {
   XrEnvironmentBlendMode environment_blend_mode{};
 
   /**
-   * The following vectors are of the samve size, and items at the same index
+   * The following vectors are of the same size, and items at the same index
    * correspond to each other.
    */
   std::vector<XrView> views;  // resized properly when initialized
