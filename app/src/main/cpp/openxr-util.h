@@ -24,6 +24,17 @@ MAKE_TO_STRING_FUNC(XrReferenceSpaceType);
 MAKE_TO_STRING_FUNC(XrResult);
 MAKE_TO_STRING_FUNC(XrViewConfigurationType);
 
+/* Convert XrVersion to a human readable version string */
+inline std::string
+GetXrVersionString(XrVersion version)
+{
+  std::ostringstream oss;
+  oss << XR_VERSION_MAJOR(version) << ".";
+  oss << XR_VERSION_MINOR(version) << ".";
+  oss << XR_VERSION_PATCH(version);
+  return oss.str();
+}
+
 inline std::string
 CheckXrResult(XrResult res, const char *originator, const char *source_location)
 {

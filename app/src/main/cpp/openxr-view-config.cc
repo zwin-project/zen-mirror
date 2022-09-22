@@ -9,14 +9,9 @@ namespace zen::display_system::oculus {
 bool
 OpenXRViewConfig::Init()
 {
-  CHECK(context_->instance != XR_NULL_HANDLE);
-  CHECK(context_->system_id != XR_NULL_SYSTEM_ID);
-  CHECK(context_->session != XR_NULL_HANDLE);
-  CHECK(context_->egl);
-
   XrSystemProperties system_properties{XR_TYPE_SYSTEM_PROPERTIES};
-  IF_XR_FAILED (err, xrGetSystemProperties(context_->instance,
-                         context_->system_id, &system_properties)) {
+  IF_XR_FAILED (err, xrGetSystemProperties(context_->instance(),
+                         context_->system_id(), &system_properties)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
@@ -41,8 +36,8 @@ OpenXRViewConfig::Init()
   std::vector<XrViewConfigurationView> config_views;
   {
     IF_XR_FAILED (err,
-        xrEnumerateViewConfigurationViews(context_->instance,
-            context_->system_id, context_->view_configuration_type, 0,
+        xrEnumerateViewConfigurationViews(context_->instance(),
+            context_->system_id(), context_->view_configuration_type(), 0,
             &view_count, nullptr)) {
       LOG_ERROR("%s", err.c_str());
       return false;
@@ -56,9 +51,9 @@ OpenXRViewConfig::Init()
     config_views.resize(view_count);
 
     IF_XR_FAILED (err,
-        xrEnumerateViewConfigurationViews(context_->instance,
-            context_->system_id, context_->view_configuration_type, view_count,
-            &view_count, config_views.data())) {
+        xrEnumerateViewConfigurationViews(context_->instance(),
+            context_->system_id(), context_->view_configuration_type(),
+            view_count, &view_count, config_views.data())) {
       LOG_ERROR("%s", err.c_str());
       return false;
     }
@@ -71,7 +66,7 @@ OpenXRViewConfig::Init()
     const std::vector<int64_t> kSupportedColorSwapchainFormats{
         GL_RGBA8, GL_RGBA8_SNORM, GL_SRGB8_ALPHA8};
 
-    IF_XR_FAILED (err, xrEnumerateSwapchainFormats(context_->session, 0,
+    IF_XR_FAILED (err, xrEnumerateSwapchainFormats(context_->session(), 0,
                            &swapchain_format_count, nullptr)) {
       LOG_ERROR("%s", err.c_str());
       return false;
@@ -80,7 +75,7 @@ OpenXRViewConfig::Init()
     std::vector<int64_t> swapchain_formats(swapchain_format_count);
 
     IF_XR_FAILED (err,
-        xrEnumerateSwapchainFormats(context_->session, swapchain_format_count,
+        xrEnumerateSwapchainFormats(context_->session(), swapchain_format_count,
             &swapchain_format_count, swapchain_formats.data())) {
       LOG_ERROR("%s", err.c_str());
       return false;
@@ -135,7 +130,7 @@ OpenXRViewConfig::Init()
     OpenXRViewConfig::Swapchain swapchain;
     swapchain.width = config_view.recommendedImageRectWidth;
     swapchain.height = config_view.recommendedImageRectHeight;
-    IF_XR_FAILED (err, xrCreateSwapchain(context_->session,
+    IF_XR_FAILED (err, xrCreateSwapchain(context_->session(),
                            &swapchain_create_info, &swapchain.handle)) {
       LOG_ERROR("%s", err.c_str());
       return false;
