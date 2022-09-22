@@ -13,6 +13,7 @@ class EglInstance {
   bool Initialize();
 
   inline EGLDisplay display();
+  inline EGLConfig config();
   inline EGLDisplay context();
 
  private:
@@ -26,6 +27,12 @@ inline EGLDisplay
 EglInstance::display()
 {
   return display_;
+}
+
+inline EGLConfig
+EglInstance::config()
+{
+  return config_;
 }
 
 inline EGLContext
