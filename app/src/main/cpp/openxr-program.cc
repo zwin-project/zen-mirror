@@ -179,7 +179,7 @@ OpenXRProgram::InitializeSystem(
 
 bool
 OpenXRProgram::InitializeGraphicsLibrary(
-    [[maybe_unused]] const std::unique_ptr<OpenXRContext> &context) const
+    const std::unique_ptr<OpenXRContext> &context) const
 {
   PFN_xrGetOpenGLESGraphicsRequirementsKHR
       xrGetOpenGLESGraphicsRequirementsKHR = nullptr;
@@ -226,6 +226,37 @@ OpenXRProgram::InitializeGraphicsLibrary(
 
   LOG_INFO("Using OpenGLES %d.%d", gl_major_version, gl_minor_version);
 
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback(
+      [](GLenum /*source*/, GLenum type, GLuint /*id*/, GLenum /*severity*/,
+          GLsizei length, const GLchar *message, const void * /*user_param*/) {
+        switch (type) {
+          case GL_DEBUG_TYPE_ERROR:  // fallthrough
+          case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            LOG_ERROR("GLES: %s", std::string(message, 0, length).c_str());
+          case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            LOG_WARN("GLES: %s", std::string(message, 0, length).c_str());
+          case GL_DEBUG_TYPE_PORTABILITY:  // fallthrough
+          case GL_DEBUG_TYPE_PERFORMANCE:  // fallthrough
+          case GL_DEBUG_TYPE_OTHER:        // fallthrough
+          case GL_DEBUG_TYPE_MARKER:       // fallthrough
+          case GL_DEBUG_TYPE_PUSH_GROUP:   // fallthrough
+          case GL_DEBUG_TYPE_POP_GROUP:
+            LOG_DEBUG("GLES: %s", std::string(message, 0, length).c_str());
+            break;
+          default:
+            LOG_ERROR("GLES: %s", std::string(message, 0, length).c_str());
+            break;
+        }
+      },
+      nullptr);
+
+  // Silence unwanted message types
+  glDebugMessageControl(
+      GL_DONT_CARE, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, NULL, GL_FALSE);
+  glDebugMessageControl(
+      GL_DONT_CARE, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, NULL, GL_FALSE);
+
   return true;
 }
 
@@ -258,7 +289,7 @@ OpenXRProgram::InitializeSession(
 
 bool
 OpenXRProgram::InitializeAppSpace(
-    [[maybe_unused]] const std::unique_ptr<OpenXRContext> &context) const
+    const std::unique_ptr<OpenXRContext> &context) const
 {
   CHECK(context->session != XR_NULL_HANDLE);
 
