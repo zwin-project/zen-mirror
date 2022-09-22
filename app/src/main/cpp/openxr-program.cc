@@ -4,75 +4,9 @@
 #include "config.h"
 #include "logger.h"
 #include "openxr-program.h"
+#include "openxr-util.h"
 
 namespace zen::display_system::oculus {
-
-namespace {
-
-#define ENUM_CASE_STR(name, val) \
-  case name:                     \
-    return #name;
-
-#define MAKE_TO_STRING_FUNC(enumType)            \
-  inline const char *to_string(enumType e)       \
-  {                                              \
-    switch (e) {                                 \
-      XR_LIST_ENUM_##enumType(ENUM_CASE_STR)     \
-                                                 \
-          default : return "Unknown " #enumType; \
-    }                                            \
-  }
-
-// Create other to_string function on demand
-MAKE_TO_STRING_FUNC(XrEnvironmentBlendMode);
-MAKE_TO_STRING_FUNC(XrFormFactor);
-MAKE_TO_STRING_FUNC(XrReferenceSpaceType);
-MAKE_TO_STRING_FUNC(XrResult);
-MAKE_TO_STRING_FUNC(XrViewConfigurationType);
-
-std::string
-CheckXrResult(XrResult res, const char *originator, const char *source_location)
-{
-  std::ostringstream err;
-  if (XR_FAILED(res)) {
-    err << "XrResult failure [" << to_string(res) << "]" << std::endl;
-    err << "    Origin: " << originator << std::endl;
-    err << "    Source: " << source_location;
-  }
-
-  return err.str();
-}
-
-#define IF_XR_FAILED(err, cmd) \
-  if (std::string err = CheckXrResult(cmd, #cmd, FILE_AND_LINE); !err.empty())
-
-namespace Math {
-
-XrQuaternionf
-ToXrQuaternionf(glm::quat orientation)
-{
-  return XrQuaternionf{
-      orientation.x, orientation.y, orientation.z, orientation.w};
-}
-
-XrVector3f
-ToXrVector3f(glm::vec3 position)
-{
-  return XrVector3f{position.x, position.y, position.z};
-}
-
-XrPosef
-ToXrPosef(glm::vec3 position, glm::quat orientation)
-{
-  return XrPosef{
-      ToXrQuaternionf(orientation),
-      ToXrVector3f(position),
-  };
-}
-
-}  // namespace Math
-
-}  // namespace
 
 bool
 OpenXRProgram::InitializeLoader(struct android_app *app) const
