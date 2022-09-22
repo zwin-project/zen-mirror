@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common.h"
+#include "openxr-action.h"
 #include "openxr-context.h"
 
 namespace zen::display_system::oculus {
@@ -17,6 +18,10 @@ class OpenXRProgram {
   /* Initialize OpenXRContext */
   bool InitializeContext(const std::unique_ptr<OpenXRContext> &context,
       struct android_app *app) const;
+
+  /* Initialize OpenXRAction */
+  bool InitializeAction(const std::unique_ptr<OpenXRContext> &context,
+      const std::unique_ptr<OpenXRAction> &action) const;
 
  private:
   /* Create a new XrInstance and store it in the context */
