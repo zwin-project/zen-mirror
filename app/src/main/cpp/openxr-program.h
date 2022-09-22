@@ -41,9 +41,6 @@ class OpenXRProgram {
   /* Create a new app space and store it in the context */
   bool InitializeAppSpace(const std::unique_ptr<OpenXRContext> &context) const;
 
-  /* Allocate view buffer and create a swapchain for each view */
-  bool InitializeViews(const std::unique_ptr<OpenXRContext> &context) const;
-
   /* Write out available view configurations, determine the view config type
    * to use and store it in the context */
   bool InitializeViewConfig(

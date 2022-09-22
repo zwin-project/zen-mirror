@@ -74,6 +74,7 @@ add_library(
     logger-android.cc
     main.cc
     openxr-program.cc
+    openxr-view-config.cc
     $<TARGET_OBJECTS:android_native_app_glue_object>
 )
 target_precompile_headers(zen_oculus_display_system PRIVATE pch.h)
