@@ -3,7 +3,6 @@
 #include "logger.h"
 #include "openxr-action.h"
 #include "openxr-context.h"
-#include "openxr-program.h"
 #include "openxr-view-config.h"
 
 using namespace zen::display_system::oculus;
@@ -19,9 +18,15 @@ android_main(struct android_app *app)
     LOG_DEBUG("Boost Version %d", BOOST_VERSION);
 
     auto context = std::make_shared<OpenXRContext>();
-    auto openxr = std::make_unique<OpenXRProgram>();
-    auto action = std::make_unique<OpenXRAction>();
+    if (!context->Init(app)) {
+      LOG_ERROR("Failed to initialize OpenXR context");
+      return;
+    }
+
     auto view_config = std::make_unique<OpenXRViewConfig>(context);
+    view_config->Init();
+
+    auto action = std::make_unique<OpenXRAction>();
 
     app->activity->vm->DetachCurrentThread();
   } catch (const std::exception &e) {

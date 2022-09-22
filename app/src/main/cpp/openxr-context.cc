@@ -3,17 +3,45 @@
 #include "common.h"
 #include "config.h"
 #include "logger.h"
-#include "openxr-program.h"
+#include "openxr-context.h"
 #include "openxr-util.h"
 
 namespace zen::display_system::oculus {
 
 bool
-OpenXRProgram::InitializeLoader(struct android_app *app) const
+OpenXRContext::Init(struct android_app *app)
 {
-  PFN_xrInitializeLoaderKHR InitializeLoader = nullptr;
+  if (!InitializeLoader(app)) return false;
+
+  LogLayersAndExtensions();
+
+  if (!InitializeInstance(app)) return false;
+
+  LogInstanceInfo();
+
+  if (!InitializeSystem()) return false;
+
+  if (!InitializeViewConfig()) return false;
+
+  if (!InitializeEnvironmentBlendMode()) return false;
+
+  if (!InitializeGraphicsLibrary()) return false;
+
+  if (!InitializeSession()) return false;
+
+  LogReferenceSpaces();
+
+  if (!InitializeAppSpace()) return false;
+
+  return true;
+}
+
+bool
+OpenXRContext::InitializeLoader(struct android_app *app)
+{
+  PFN_xrInitializeLoaderKHR xrInitializeLoader = nullptr;
   auto res = xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR",
-      (PFN_xrVoidFunction *)(&InitializeLoader));
+      (PFN_xrVoidFunction *)(&xrInitializeLoader));
   if (XR_FAILED(res)) {
     LOG_ERROR("Failed to get xrInitializeLoaderKHR proc address");
     return false;
@@ -25,134 +53,14 @@ OpenXRProgram::InitializeLoader(struct android_app *app) const
   loader_init_info_android.next = nullptr;
   loader_init_info_android.applicationVM = app->activity->vm;
   loader_init_info_android.applicationContext = app->activity->clazz;
-  InitializeLoader(
+  xrInitializeLoader(
       (const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
 
   return true;
 }
 
 bool
-OpenXRProgram::InitializeContext(const std::unique_ptr<OpenXRContext> &context,
-    struct android_app *app) const
-{
-  LogLayersAndExtensions();
-
-  if (!InitializeInstance(context, app)) return false;
-
-  LogInstanceInfo(context);
-
-  if (!InitializeSystem(context)) return false;
-
-  if (!InitializeViewConfig(context)) return false;
-
-  if (!InitializeEnvironmentBlendMode(context)) return false;
-
-  if (!InitializeGraphicsLibrary(context)) return false;
-
-  if (!InitializeSession(context)) return false;
-
-  LogReferenceSpaces(context);
-
-  if (!InitializeAppSpace(context)) return false;
-
-  return true;
-}
-
-bool
-OpenXRProgram::InitializeAction(const std::unique_ptr<OpenXRContext> &context,
-    const std::unique_ptr<OpenXRAction> &action) const
-{
-  // Create an action set
-  {
-    XrActionSetCreateInfo action_set_create_info{
-        XR_TYPE_ACTION_SET_CREATE_INFO};
-    strcpy(action_set_create_info.actionSetName, "zen");
-    strcpy(action_set_create_info.localizedActionSetName, "zen");
-    action_set_create_info.priority = 0;
-    IF_XR_FAILED (err, xrCreateActionSet(context->instance,
-                           &action_set_create_info, &action->action_set)) {
-      LOG_ERROR("%s", err.c_str());
-      return false;
-    }
-  }
-
-  // Create actions
-  {
-    XrActionCreateInfo action_create_info{XR_TYPE_ACTION_CREATE_INFO};
-    action_create_info.actionType = XR_ACTION_TYPE_BOOLEAN_INPUT;
-    strcpy(action_create_info.actionName, "quit_session");
-    strcpy(action_create_info.localizedActionName, "Quit Session");
-    action_create_info.countSubactionPaths = 0;
-    action_create_info.subactionPaths = nullptr;
-    IF_XR_FAILED (err, xrCreateAction(action->action_set, &action_create_info,
-                           &action->quit_action)) {
-      LOG_ERROR("%s", err.c_str());
-      return false;
-    }
-  }
-
-  // Bind actions
-  {
-    std::array<XrPath, 2> menu_click_path;  // 0: right, 1: left
-    XrPath khr_simple_interaction_profile_path;
-    IF_XR_FAILED (err,
-        xrStringToPath(context->instance, "/user/hand/right/input/menu/click",
-            &menu_click_path[0])) {
-      LOG_ERROR("%s", err.c_str());
-      return false;
-    }
-
-    IF_XR_FAILED (err,
-        xrStringToPath(context->instance, "/user/hand/left/input/menu/click",
-            &menu_click_path[1])) {
-      LOG_ERROR("%s", err.c_str());
-      return false;
-    }
-
-    IF_XR_FAILED (err, xrStringToPath(context->instance,
-                           "/interaction_profiles/khr/simple_controller",
-                           &khr_simple_interaction_profile_path)) {
-      LOG_ERROR("%s", err.c_str());
-      return false;
-    }
-
-    std::vector<XrActionSuggestedBinding> bindings{{
-        {action->quit_action, menu_click_path[0]},
-        {action->quit_action, menu_click_path[1]},
-    }};
-
-    XrInteractionProfileSuggestedBinding suggested_bindings{
-        XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING};
-    suggested_bindings.interactionProfile = khr_simple_interaction_profile_path;
-    suggested_bindings.suggestedBindings = bindings.data();
-    suggested_bindings.countSuggestedBindings = bindings.size();
-
-    IF_XR_FAILED (err, xrSuggestInteractionProfileBindings(
-                           context->instance, &suggested_bindings)) {
-      LOG_ERROR("%s", err.c_str());
-      return false;
-    }
-  }
-
-  // Attach the action set to the session
-  {
-    XrSessionActionSetsAttachInfo attach_info{
-        XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO};
-    attach_info.countActionSets = 1;
-    attach_info.actionSets = &action->action_set;
-    IF_XR_FAILED (err,
-        xrAttachSessionActionSets(context->session, &attach_info)) {
-      LOG_ERROR("%s", err.c_str());
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool
-OpenXRProgram::InitializeInstance(const std::unique_ptr<OpenXRContext> &context,
-    struct android_app *app) const
+OpenXRContext::InitializeInstance(struct android_app *app)
 {
   std::vector<const char *> extensions;
   extensions.push_back(XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME);
@@ -172,7 +80,7 @@ OpenXRProgram::InitializeInstance(const std::unique_ptr<OpenXRContext> &context,
   strcpy(create_info.applicationInfo.applicationName, config::APP_NAME);
   create_info.applicationInfo.apiVersion = XR_CURRENT_API_VERSION;
 
-  IF_XR_FAILED (err, xrCreateInstance(&create_info, &context->instance)) {
+  IF_XR_FAILED (err, xrCreateInstance(&create_info, &instance_)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
@@ -181,50 +89,47 @@ OpenXRProgram::InitializeInstance(const std::unique_ptr<OpenXRContext> &context,
 }
 
 bool
-OpenXRProgram::InitializeSystem(
-    const std::unique_ptr<OpenXRContext> &context) const
+OpenXRContext::InitializeSystem()
 {
-  CHECK(context->system_id == XR_NULL_SYSTEM_ID);
+  CHECK(system_id_ == XR_NULL_SYSTEM_ID);
   constexpr XrFormFactor kFormFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
 
   XrSystemGetInfo system_info{XR_TYPE_SYSTEM_GET_INFO};
   system_info.formFactor = kFormFactor;
-  IF_XR_FAILED (err,
-      xrGetSystem(context->instance, &system_info, &context->system_id)) {
+  IF_XR_FAILED (err, xrGetSystem(instance_, &system_info, &system_id_)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
 
-  LOG_DEBUG("Using system %" PRIu64 " for form factor %s", context->system_id,
+  LOG_DEBUG("Using system %" PRIu64 " for form factor %s", system_id_,
       to_string(kFormFactor));
 
   return true;
 }
 
 bool
-OpenXRProgram::InitializeGraphicsLibrary(
-    const std::unique_ptr<OpenXRContext> &context) const
+OpenXRContext::InitializeGraphicsLibrary()
 {
   PFN_xrGetOpenGLESGraphicsRequirementsKHR
       xrGetOpenGLESGraphicsRequirementsKHR = nullptr;
-  IF_XR_FAILED (err, xrGetInstanceProcAddr(context->instance,
-                         "xrGetOpenGLESGraphicsRequirementsKHR",
-                         reinterpret_cast<PFN_xrVoidFunction *>(
-                             &xrGetOpenGLESGraphicsRequirementsKHR))) {
+  IF_XR_FAILED (err,
+      xrGetInstanceProcAddr(instance_, "xrGetOpenGLESGraphicsRequirementsKHR",
+          reinterpret_cast<PFN_xrVoidFunction *>(
+              &xrGetOpenGLESGraphicsRequirementsKHR))) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
 
   XrGraphicsRequirementsOpenGLESKHR graphicsRequirements{
       XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR};
-  IF_XR_FAILED (err, xrGetOpenGLESGraphicsRequirementsKHR(context->instance,
-                         context->system_id, &graphicsRequirements)) {
+  IF_XR_FAILED (err, xrGetOpenGLESGraphicsRequirementsKHR(
+                         instance_, system_id_, &graphicsRequirements)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
 
-  context->egl = std::make_unique<EglInstance>();
-  if (!context->egl->Initialize()) {
+  egl_ = std::make_unique<EglInstance>();
+  if (!egl_->Initialize()) {
     LOG_ERROR("Failed to initialize EGL context");
     return false;
   }
@@ -285,25 +190,24 @@ OpenXRProgram::InitializeGraphicsLibrary(
 }
 
 bool
-OpenXRProgram::InitializeSession(
-    const std::unique_ptr<OpenXRContext> &context) const
+OpenXRContext::InitializeSession()
 {
-  CHECK(context->instance != XR_NULL_HANDLE);
-  CHECK(context->system_id != XR_NULL_SYSTEM_ID);
+  CHECK(instance_ != XR_NULL_HANDLE);
+  CHECK(system_id_ != XR_NULL_SYSTEM_ID);
 
   XrSessionCreateInfo session_create_info{XR_TYPE_SESSION_CREATE_INFO};
 
   XrGraphicsBindingOpenGLESAndroidKHR graphics_binding{
       XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR};
-  graphics_binding.display = context->egl->display();
-  graphics_binding.config = context->egl->config();
-  graphics_binding.context = context->egl->context();
+  graphics_binding.display = egl_->display();
+  graphics_binding.config = egl_->config();
+  graphics_binding.context = egl_->context();
 
   session_create_info.next =
       reinterpret_cast<XrBaseInStructure *>(&graphics_binding);
-  session_create_info.systemId = context->system_id;
-  IF_XR_FAILED (err, xrCreateSession(context->instance, &session_create_info,
-                         &context->session)) {
+  session_create_info.systemId = system_id_;
+  IF_XR_FAILED (err,
+      xrCreateSession(instance_, &session_create_info, &session_)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
@@ -312,10 +216,9 @@ OpenXRProgram::InitializeSession(
 }
 
 bool
-OpenXRProgram::InitializeAppSpace(
-    const std::unique_ptr<OpenXRContext> &context) const
+OpenXRContext::InitializeAppSpace()
 {
-  CHECK(context->session != XR_NULL_HANDLE);
+  CHECK(session_ != XR_NULL_HANDLE);
 
   glm::vec3 position(0, 0, 0);
   glm::quat orientation(0, 0, 0, 1);
@@ -326,8 +229,8 @@ OpenXRProgram::InitializeAppSpace(
   reference_space_create_info.referenceSpaceType =
       XR_REFERENCE_SPACE_TYPE_STAGE;
 
-  IF_XR_FAILED (err, xrCreateReferenceSpace(context->session,
-                         &reference_space_create_info, &context->app_space)) {
+  IF_XR_FAILED (err, xrCreateReferenceSpace(
+                         session_, &reference_space_create_info, &app_space_)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
@@ -336,17 +239,15 @@ OpenXRProgram::InitializeAppSpace(
 }
 
 bool
-OpenXRProgram::InitializeViewConfig(
-    const std::unique_ptr<OpenXRContext> &context) const
+OpenXRContext::InitializeViewConfig()
 {
-  CHECK(context->instance != XR_NULL_HANDLE);
-  CHECK(context->system_id != XR_NULL_SYSTEM_ID);
+  CHECK(instance_ != XR_NULL_HANDLE);
+  CHECK(system_id_ != XR_NULL_SYSTEM_ID);
   bool acceptableConfigTypeFound = false;
 
   uint32_t view_config_type_count;
-  IF_XR_FAILED (err,
-      xrEnumerateViewConfigurations(context->instance, context->system_id, 0,
-          &view_config_type_count, nullptr)) {
+  IF_XR_FAILED (err, xrEnumerateViewConfigurations(instance_, system_id_, 0,
+                         &view_config_type_count, nullptr)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
@@ -354,9 +255,9 @@ OpenXRProgram::InitializeViewConfig(
   std::vector<XrViewConfigurationType> view_config_types(
       view_config_type_count);
 
-  IF_XR_FAILED (err, xrEnumerateViewConfigurations(context->instance,
-                         context->system_id, view_config_type_count,
-                         &view_config_type_count, view_config_types.data())) {
+  IF_XR_FAILED (err, xrEnumerateViewConfigurations(instance_, system_id_,
+                         view_config_type_count, &view_config_type_count,
+                         view_config_types.data())) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
@@ -364,7 +265,7 @@ OpenXRProgram::InitializeViewConfig(
   LOG_DEBUG("Available View Configuration Types: (%d)", view_config_type_count);
   for (auto view_config_type : view_config_types) {
     if (view_config_type == OpenXRContext::kAcceptableViewConfigType) {
-      context->view_configuration_type = view_config_type;
+      view_configuration_type_ = view_config_type;
       acceptableConfigTypeFound = true;
     }
 
@@ -375,9 +276,8 @@ OpenXRProgram::InitializeViewConfig(
 
     XrViewConfigurationProperties view_config_props{
         XR_TYPE_VIEW_CONFIGURATION_PROPERTIES};
-    IF_XR_FAILED (err,
-        xrGetViewConfigurationProperties(context->instance, context->system_id,
-            view_config_type, &view_config_props)) {
+    IF_XR_FAILED (err, xrGetViewConfigurationProperties(instance_, system_id_,
+                           view_config_type, &view_config_props)) {
       LOG_WARN("%s", err.c_str());
       continue;
     }
@@ -386,9 +286,8 @@ OpenXRProgram::InitializeViewConfig(
         view_config_props.fovMutable == XR_TRUE ? "True" : "False");
 
     uint32_t view_count;
-    IF_XR_FAILED (err,
-        xrEnumerateViewConfigurationViews(context->instance, context->system_id,
-            view_config_type, 0, &view_count, nullptr)) {
+    IF_XR_FAILED (err, xrEnumerateViewConfigurationViews(instance_, system_id_,
+                           view_config_type, 0, &view_count, nullptr)) {
       LOG_WARN("%s", err.c_str());
       continue;
     }
@@ -396,9 +295,9 @@ OpenXRProgram::InitializeViewConfig(
     if (view_count > 0) {
       std::vector<XrViewConfigurationView> views(
           view_count, {XR_TYPE_VIEW_CONFIGURATION_VIEW});
-      IF_XR_FAILED (err, xrEnumerateViewConfigurationViews(context->instance,
-                             context->system_id, view_config_type, view_count,
-                             &view_count, views.data())) {
+      IF_XR_FAILED (err,
+          xrEnumerateViewConfigurationViews(instance_, system_id_,
+              view_config_type, view_count, &view_count, views.data())) {
         LOG_WARN("%s", err.c_str());
         continue;
       }
@@ -427,38 +326,35 @@ OpenXRProgram::InitializeViewConfig(
 }
 
 bool
-OpenXRProgram::InitializeEnvironmentBlendMode(
-    const std::unique_ptr<OpenXRContext> &context) const
+OpenXRContext::InitializeEnvironmentBlendMode()
 {
-  CHECK(context->instance != XR_NULL_HANDLE);
-  CHECK(context->system_id != XR_NULL_SYSTEM_ID);
-  CHECK(context->view_configuration_type ==
-        OpenXRContext::kAcceptableViewConfigType);
+  CHECK(instance_ != XR_NULL_HANDLE);
+  CHECK(system_id_ != XR_NULL_SYSTEM_ID);
+  CHECK(view_configuration_type_ == OpenXRContext::kAcceptableViewConfigType);
   bool acceptable_blend_mode_found = false;
 
   uint32_t count;
-  IF_XR_FAILED (err,
-      xrEnumerateEnvironmentBlendModes(context->instance, context->system_id,
-          context->view_configuration_type, 0, &count, nullptr)) {
+  IF_XR_FAILED (err, xrEnumerateEnvironmentBlendModes(instance_, system_id_,
+                         view_configuration_type_, 0, &count, nullptr)) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
 
   std::vector<XrEnvironmentBlendMode> blend_modes(count);
 
-  IF_XR_FAILED (err, xrEnumerateEnvironmentBlendModes(context->instance,
-                         context->system_id, context->view_configuration_type,
-                         count, &count, blend_modes.data())) {
+  IF_XR_FAILED (err,
+      xrEnumerateEnvironmentBlendModes(instance_, system_id_,
+          view_configuration_type_, count, &count, blend_modes.data())) {
     LOG_ERROR("%s", err.c_str());
     return false;
   }
 
   LOG_DEBUG("Available Environment Blend Modes for %s: (%d)",
-      to_string(context->view_configuration_type), count);
+      to_string(view_configuration_type_), count);
   for (uint32_t i = 0; i < count; i++) {
     auto mode = blend_modes[i];
     if (mode == OpenXRContext::kAcceptableEnvironmentBlendModeType) {
-      context->environment_blend_mode =
+      environment_blend_mode_ =
           OpenXRContext::kAcceptableEnvironmentBlendModeType;
       acceptable_blend_mode_found = true;
     }
@@ -478,22 +374,21 @@ OpenXRProgram::InitializeEnvironmentBlendMode(
 }
 
 void
-OpenXRProgram::LogReferenceSpaces(
-    const std::unique_ptr<OpenXRContext> &context) const
+OpenXRContext::LogReferenceSpaces() const
 {
-  CHECK(context->session != XR_NULL_HANDLE);
+  CHECK(session_ != XR_NULL_HANDLE);
 
   uint32_t space_count;
   IF_XR_FAILED (err,
-      xrEnumerateReferenceSpaces(context->session, 0, &space_count, nullptr)) {
+      xrEnumerateReferenceSpaces(session_, 0, &space_count, nullptr)) {
     LOG_WARN("%s", err.c_str());
     return;
   }
 
   std::vector<XrReferenceSpaceType> spaces(space_count);
 
-  IF_XR_FAILED (err, xrEnumerateReferenceSpaces(context->session, space_count,
-                         &space_count, spaces.data())) {
+  IF_XR_FAILED (err, xrEnumerateReferenceSpaces(
+                         session_, space_count, &space_count, spaces.data())) {
     LOG_WARN("%s", err.c_str());
     return;
   }
@@ -505,14 +400,12 @@ OpenXRProgram::LogReferenceSpaces(
 }
 
 void
-OpenXRProgram::LogInstanceInfo(
-    const std::unique_ptr<OpenXRContext> &context) const
+OpenXRContext::LogInstanceInfo() const
 {
-  CHECK(context->instance != XR_NULL_HANDLE);
+  CHECK(instance_ != XR_NULL_HANDLE);
 
   XrInstanceProperties instanceProperties{XR_TYPE_INSTANCE_PROPERTIES};
-  IF_XR_FAILED (err,
-      xrGetInstanceProperties(context->instance, &instanceProperties)) {
+  IF_XR_FAILED (err, xrGetInstanceProperties(instance_, &instanceProperties)) {
     LOG_WARN("%s", err.c_str());
     return;
   }
@@ -523,7 +416,7 @@ OpenXRProgram::LogInstanceInfo(
 }
 
 void
-OpenXRProgram::LogLayersAndExtensions() const
+OpenXRContext::LogLayersAndExtensions() const
 {
   const auto LogExtensions = [](const char *layerName, int indent = 0) {
     uint32_t instance_extension_count;
@@ -582,16 +475,6 @@ OpenXRProgram::LogLayersAndExtensions() const
         layer.layerVersion, layer.description);
     LogExtensions(layer.layerName, 4);
   }
-}
-
-std::string
-OpenXRProgram::GetXrVersionString(XrVersion version) const
-{
-  std::ostringstream oss;
-  oss << XR_VERSION_MAJOR(version) << ".";
-  oss << XR_VERSION_MINOR(version) << ".";
-  oss << XR_VERSION_PATCH(version);
-  return oss.str();
 }
 
 }  // namespace zen::display_system::oculus
