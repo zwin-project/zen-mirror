@@ -239,7 +239,7 @@ OpenXRProgram::InitializeSession(
   XrGraphicsBindingOpenGLESAndroidKHR graphics_binding{
       XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR};
   graphics_binding.display = context->egl->display();
-  graphics_binding.config = (EGLConfig)0;
+  graphics_binding.config = context->egl->config();
   graphics_binding.context = context->egl->context();
 
   session_create_info.next =
