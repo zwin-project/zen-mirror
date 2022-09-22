@@ -5,6 +5,7 @@
 #include <GLES3/gl32.h>
 #include <android/log.h>
 #include <android_native_app_glue.h>
+#include <array>
 #include <boost/version.hpp>
 #include <cinttypes>
 #include <glm/gtx/quaternion.hpp>

@@ -5,6 +5,9 @@
 namespace zen::display_system::oculus {
 
 struct OpenXRContext {
+  friend class OpenXRProgram;
+
+ private:
   struct Swapchain;
 
   XrInstance instance{XR_NULL_HANDLE};
