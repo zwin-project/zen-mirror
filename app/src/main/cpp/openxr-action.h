@@ -1,13 +1,21 @@
 #pragma once
 
+#include "openxr-context.h"
+
 namespace zen::display_system::oculus {
 
-struct OpenXRAction {
-  friend class OpenXRProgram;
+class OpenXRAction {
+ public:
+  DISABLE_MOVE_AND_COPY(OpenXRAction);
+  OpenXRAction(std::shared_ptr<OpenXRContext> context) : context_(context) {}
+  ~OpenXRAction() = default;
+
+  bool Init();
 
  private:
-  XrActionSet action_set{XR_NULL_HANDLE};
-  XrAction quit_action{XR_NULL_HANDLE};
+  std::shared_ptr<OpenXRContext> context_;
+  XrActionSet action_set_{XR_NULL_HANDLE};
+  XrAction quit_action_{XR_NULL_HANDLE};
 };
 
 }  // namespace zen::display_system::oculus

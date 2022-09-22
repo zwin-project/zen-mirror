@@ -24,9 +24,16 @@ android_main(struct android_app *app)
     }
 
     auto view_config = std::make_unique<OpenXRViewConfig>(context);
-    view_config->Init();
+    if (!view_config->Init()) {
+      LOG_ERROR("Failed to initialize OpenXR view configuration");
+      return;
+    }
 
-    auto action = std::make_unique<OpenXRAction>();
+    auto action = std::make_unique<OpenXRAction>(context);
+    if (!action->Init()) {
+      LOG_ERROR("Failed to initialize OpenXR actions");
+      return;
+    }
 
     app->activity->vm->DetachCurrentThread();
   } catch (const std::exception &e) {
