@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "egl-instance.h"
-#include "openxr-action.h"
 
 namespace zen::display_system::oculus {
 
