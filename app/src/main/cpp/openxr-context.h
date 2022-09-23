@@ -2,17 +2,21 @@
 
 #include "common.h"
 #include "egl-instance.h"
+#include "loop.h"
 
 namespace zen::display_system::oculus {
 
 class OpenXRContext {
  public:
   DISABLE_MOVE_AND_COPY(OpenXRContext);
-  OpenXRContext() = default;
+  OpenXRContext(std::shared_ptr<Loop> loop) : loop_(std::move(loop)) {}
   ~OpenXRContext() = default;
 
   /* Initialize OpenXRContext */
   bool Init(struct android_app *app);
+
+  /* Handle session state update */
+  void UpdateSessionState(XrSessionState state, XrTime time);
 
   inline XrInstance instance();
   inline XrSystemId system_id();
@@ -68,9 +72,11 @@ class OpenXRContext {
   XrSystemId system_id_{XR_NULL_SYSTEM_ID};
   XrSession session_{XR_NULL_HANDLE};
   XrSpace app_space_{XR_NULL_HANDLE};
+  XrSessionState session_state_{XR_SESSION_STATE_UNKNOWN};
   XrViewConfigurationType view_configuration_type_{};
   XrEnvironmentBlendMode environment_blend_mode_{};
   std::unique_ptr<EglInstance> egl_;
+  std::shared_ptr<Loop> loop_;
 };
 
 inline XrInstance

@@ -36,6 +36,44 @@ OpenXRContext::Init(struct android_app *app)
   return true;
 }
 
+void
+OpenXRContext::UpdateSessionState(XrSessionState state, XrTime time)
+{
+  XrSessionState old_state = session_state_;
+  session_state_ = state;
+  LOG_INFO("XrEventDataSessionStateChanged: state %s -> %s time=%" PRId64,
+      to_string(old_state), to_string(session_state_), time);
+
+  switch (session_state_) {
+    case XR_SESSION_STATE_READY: {
+      XrSessionBeginInfo session_begin_info{XR_TYPE_SESSION_BEGIN_INFO};
+      session_begin_info.primaryViewConfigurationType =
+          view_configuration_type_;
+      IF_XR_FAILED (err, xrBeginSession(session_, &session_begin_info)) {
+        LOG_ERROR("%s", err.c_str());
+        loop_->Terminate();
+      }
+      break;
+    }
+
+    case XR_SESSION_STATE_STOPPING: {
+      IF_XR_FAILED (err, xrEndSession(session_)) {
+        LOG_ERROR("%s", err.c_str());
+        loop_->Terminate();
+      }
+      break;
+    }
+
+    case XR_SESSION_STATE_EXITING:  // fall through
+    case XR_SESSION_STATE_LOSS_PENDING:
+      loop_->Terminate();
+      break;
+
+    default:
+      break;
+  }
+}
+
 bool
 OpenXRContext::InitializeLoader(struct android_app *app)
 {

@@ -22,6 +22,7 @@ MAKE_TO_STRING_FUNC(XrEnvironmentBlendMode);
 MAKE_TO_STRING_FUNC(XrFormFactor);
 MAKE_TO_STRING_FUNC(XrReferenceSpaceType);
 MAKE_TO_STRING_FUNC(XrResult);
+MAKE_TO_STRING_FUNC(XrSessionState);
 MAKE_TO_STRING_FUNC(XrViewConfigurationType);
 
 /* Convert XrVersion to a human readable version string */

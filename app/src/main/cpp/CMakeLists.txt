@@ -72,9 +72,11 @@ add_library(
     
     egl-instance.cc
     logger-android.cc
+    loop.cc
     main.cc
     openxr-action.cc
     openxr-context.cc
+    openxr-event-source.cc
     openxr-view-config.cc
     $<TARGET_OBJECTS:android_native_app_glue_object>
 )
