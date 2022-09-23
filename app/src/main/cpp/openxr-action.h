@@ -8,7 +8,7 @@ class OpenXRAction {
  public:
   DISABLE_MOVE_AND_COPY(OpenXRAction);
   OpenXRAction(std::shared_ptr<OpenXRContext> context) : context_(context) {}
-  ~OpenXRAction() = default;
+  ~OpenXRAction();
 
   bool Init();
 

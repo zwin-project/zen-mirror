@@ -16,7 +16,7 @@ class Loop {
   void Terminate();
 
   /* Add a busy loop sources to be processed at each loop iteration */
-  void AddBusy(std::shared_ptr<Loop::ISource> source);
+  void AddBusy(std::weak_ptr<Loop::ISource> source);
 
  private:
   /**
@@ -24,7 +24,7 @@ class Loop {
    */
   bool HandleAndroidPollEvent(int res, void *data);
 
-  std::vector<std::shared_ptr<Loop::ISource>> busy_sources_;
+  std::vector<std::weak_ptr<Loop::ISource>> busy_sources_;
   struct android_app *app_;
   bool running_;
 };

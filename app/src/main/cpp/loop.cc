@@ -20,9 +20,14 @@ Loop::Run()
       }
     }
 
-    for (auto &source : busy_sources_) {
+    for (auto it = busy_sources_.begin(); it != busy_sources_.end();) {
       if (running_ == false) break;
-      source->Process();
+      if (auto source = (*it).lock()) {
+        source->Process();
+        it++;
+      } else {
+        busy_sources_.erase(it);
+      }
     }
   }
 }
@@ -34,9 +39,9 @@ Loop::Terminate()
 }
 
 void
-Loop::AddBusy(std::shared_ptr<Loop::ISource> source)
+Loop::AddBusy(std::weak_ptr<Loop::ISource> source)
 {
-  busy_sources_.push_back(std::move(source));
+  busy_sources_.push_back(source);
 }
 
 bool

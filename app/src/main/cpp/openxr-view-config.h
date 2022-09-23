@@ -12,7 +12,7 @@ class OpenXRViewConfig {
   OpenXRViewConfig(std::shared_ptr<OpenXRContext> context) : context_(context)
   {
   }
-  ~OpenXRViewConfig() = default;
+  ~OpenXRViewConfig();
 
   /* Allocate view buffer and create a swapchain for each view */
   bool Init();

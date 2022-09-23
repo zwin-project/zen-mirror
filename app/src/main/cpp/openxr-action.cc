@@ -6,6 +6,17 @@
 
 namespace zen::display_system::oculus {
 
+OpenXRAction::~OpenXRAction()
+{
+  if (quit_action_ != XR_NULL_HANDLE) {
+    xrDestroyAction(quit_action_);
+  }
+
+  if (action_set_ != XR_NULL_HANDLE) {
+    xrDestroyActionSet(action_set_);
+  }
+}
+
 bool
 OpenXRAction::Init()
 {
