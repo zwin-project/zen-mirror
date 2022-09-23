@@ -1,8 +1,10 @@
 #include "pch.h"
 
 #include "logger.h"
+#include "loop.h"
 #include "openxr-action.h"
 #include "openxr-context.h"
+#include "openxr-event-source.h"
 #include "openxr-view-config.h"
 
 using namespace zen::display_system::oculus;
@@ -16,8 +18,11 @@ android_main(struct android_app *app)
 
     InitializeLogger();
     LOG_DEBUG("Boost Version %d", BOOST_VERSION);
+    LOG_DEBUG("%s", GLM_VERSION_MESSAGE);
 
-    auto context = std::make_shared<OpenXRContext>();
+    auto loop = std::make_shared<Loop>(app);
+
+    auto context = std::make_shared<OpenXRContext>(loop);
     if (!context->Init(app)) {
       LOG_ERROR("Failed to initialize OpenXR context");
       return;
@@ -34,6 +39,11 @@ android_main(struct android_app *app)
       LOG_ERROR("Failed to initialize OpenXR actions");
       return;
     }
+
+    auto xr_event_source = std::make_shared<OpenXREventSource>(context, loop);
+    loop->AddBusy(xr_event_source);
+
+    loop->Run();
 
     app->activity->vm->DetachCurrentThread();
   } catch (const std::exception &e) {
