@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include "config.h"
 #include "logger.h"
 #include "loop.h"
 #include "openxr-action.h"
@@ -51,4 +52,6 @@ android_main(struct android_app *app)
   } catch (...) {
     LOG_ERROR("Unkown Error");
   }
+
+  LOG_INFO("%s Exit", config::APP_NAME);
 }

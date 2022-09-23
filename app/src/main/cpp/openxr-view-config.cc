@@ -6,6 +6,13 @@
 
 namespace zen::display_system::oculus {
 
+OpenXRViewConfig::~OpenXRViewConfig()
+{
+  for (auto swapchain : swapchains_) {
+    xrDestroySwapchain(swapchain.handle);
+  }
+}
+
 bool
 OpenXRViewConfig::Init()
 {

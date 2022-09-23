@@ -10,7 +10,7 @@ class OpenXRContext {
  public:
   DISABLE_MOVE_AND_COPY(OpenXRContext);
   OpenXRContext(std::shared_ptr<Loop> loop) : loop_(std::move(loop)) {}
-  ~OpenXRContext() = default;
+  ~OpenXRContext();
 
   /* Initialize OpenXRContext */
   bool Init(struct android_app *app);

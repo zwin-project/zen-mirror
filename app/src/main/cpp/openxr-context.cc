@@ -8,6 +8,21 @@
 
 namespace zen::display_system::oculus {
 
+OpenXRContext::~OpenXRContext()
+{
+  if (app_space_ != XR_NULL_HANDLE) {
+    xrDestroySpace(app_space_);
+  }
+
+  if (session_ != XR_NULL_HANDLE) {
+    xrDestroySession(session_);
+  }
+
+  if (instance_ != XR_NULL_HANDLE) {
+    xrDestroyInstance(instance_);
+  }
+}
+
 bool
 OpenXRContext::Init(struct android_app *app)
 {
@@ -91,8 +106,12 @@ OpenXRContext::InitializeLoader(struct android_app *app)
   loader_init_info_android.next = nullptr;
   loader_init_info_android.applicationVM = app->activity->vm;
   loader_init_info_android.applicationContext = app->activity->clazz;
-  xrInitializeLoader(
-      (const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
+  IF_XR_FAILED (err,
+      xrInitializeLoader(
+          (const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android)) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
 
   return true;
 }
