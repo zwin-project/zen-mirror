@@ -22,6 +22,12 @@ class OpenXRViewSource : public Loop::ISource {
   void Process() override;
 
  private:
+  /**
+   * @returns false when the views should not be rendered.
+   */
+  bool RenderViews(XrTime predict_display_time,
+      std::vector<XrCompositionLayerProjectionView>& projection_layer_views);
+
   std::shared_ptr<OpenXRContext> context_;
   std::shared_ptr<Loop> loop_;
 
