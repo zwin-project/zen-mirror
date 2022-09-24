@@ -3,7 +3,7 @@
 #include "config.h"
 #include "logger.h"
 #include "loop.h"
-#include "openxr-action.h"
+#include "openxr-action-source.h"
 #include "openxr-context.h"
 #include "openxr-event-source.h"
 #include "openxr-view-config.h"
@@ -36,16 +36,18 @@ android_main(struct android_app *app)
       return;
     }
 
-    auto action = std::make_unique<OpenXRAction>(context);
-    if (!action->Init()) {
+    auto xr_event_source = std::make_shared<OpenXREventSource>(context, loop);
+
+    auto action_source = std::make_shared<OpenXRActionSource>(context, loop);
+    if (!action_source->Init()) {
       LOG_ERROR("Failed to initialize OpenXR actions");
       return;
     }
 
-    auto xr_event_source = std::make_shared<OpenXREventSource>(context, loop);
     auto render_source = std::make_shared<RenderSource>(context, loop);
 
     loop->AddBusy(xr_event_source);
+    loop->AddBusy(action_source);
     loop->AddBusy(render_source);
 
     loop->Run();
