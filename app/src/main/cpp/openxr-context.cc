@@ -68,6 +68,7 @@ OpenXRContext::UpdateSessionState(XrSessionState state, XrTime time)
         LOG_ERROR("%s", err.c_str());
         loop_->Terminate();
       }
+      is_session_running_ = true;
       break;
     }
 
@@ -76,6 +77,7 @@ OpenXRContext::UpdateSessionState(XrSessionState state, XrTime time)
         LOG_ERROR("%s", err.c_str());
         loop_->Terminate();
       }
+      is_session_running_ = false;
       break;
     }
 

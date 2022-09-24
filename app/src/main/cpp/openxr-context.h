@@ -21,6 +21,7 @@ class OpenXRContext {
   inline XrInstance instance();
   inline XrSystemId system_id();
   inline XrSession session();
+  inline bool is_session_running();
   inline XrViewConfigurationType view_configuration_type();
   inline XrEnvironmentBlendMode environment_blend_mode();
 
@@ -72,6 +73,7 @@ class OpenXRContext {
   XrSystemId system_id_{XR_NULL_SYSTEM_ID};
   XrSession session_{XR_NULL_HANDLE};
   XrSpace app_space_{XR_NULL_HANDLE};
+  bool is_session_running_{false};
   XrSessionState session_state_{XR_SESSION_STATE_UNKNOWN};
   XrViewConfigurationType view_configuration_type_{};
   XrEnvironmentBlendMode environment_blend_mode_{};
@@ -95,6 +97,12 @@ inline XrSession
 OpenXRContext::session()
 {
   return session_;
+}
+
+inline bool
+OpenXRContext::is_session_running()
+{
+  return is_session_running_;
 }
 
 inline XrViewConfigurationType
