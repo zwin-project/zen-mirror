@@ -74,7 +74,7 @@ add_library(
     logger-android.cc
     loop.cc
     main.cc
-    openxr-action.cc
+    openxr-action-source.cc
     openxr-context.cc
     openxr-event-source.cc
     openxr-view-config.cc
