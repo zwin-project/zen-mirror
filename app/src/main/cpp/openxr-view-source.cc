@@ -192,8 +192,27 @@ OpenXRViewSource::Process()
   }
 
   std::vector<XrCompositionLayerBaseHeader *> layers;
+  XrCompositionLayerProjection layer{XR_TYPE_COMPOSITION_LAYER_PROJECTION};
+  std::vector<XrCompositionLayerProjectionView> projection_layer_views;
   if (frame_state.shouldRender == XR_TRUE) {
-    // TODO: render
+    if (RenderViews(
+            frame_state.predictedDisplayPeriod, projection_layer_views)) {
+      layer.space = context_->app_space();
+
+      if (context_->environment_blend_mode() ==
+          XR_ENVIRONMENT_BLEND_MODE_ALPHA_BLEND) {
+        layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT |
+                           XR_COMPOSITION_LAYER_UNPREMULTIPLIED_ALPHA_BIT;
+      } else {
+        layer.layerFlags = 0;
+      }
+
+      layer.viewCount = (uint32_t)projection_layer_views.size();
+      layer.views = projection_layer_views.data();
+
+      layers.push_back(
+          reinterpret_cast<XrCompositionLayerBaseHeader *>(&layer));
+    }
   }
 
   XrFrameEndInfo frame_end_info{XR_TYPE_FRAME_END_INFO};
@@ -206,6 +225,127 @@ OpenXRViewSource::Process()
     loop_->Terminate();
     return;
   }
+}
+
+bool
+OpenXRViewSource::RenderViews(XrTime predict_display_time,
+    std::vector<XrCompositionLayerProjectionView> &projection_layer_views)
+{
+  XrViewState view_state{XR_TYPE_VIEW_STATE};
+  uint32_t view_capacity_input = (uint32_t)views_.size();
+  uint32_t view_count_output;
+
+  XrViewLocateInfo view_locate_info{XR_TYPE_VIEW_LOCATE_INFO};
+  view_locate_info.viewConfigurationType = context_->view_configuration_type();
+  view_locate_info.displayTime = predict_display_time;
+  view_locate_info.space = context_->app_space();
+  IF_XR_FAILED (err,
+      xrLocateViews(context_->session(), &view_locate_info, &view_state,
+          view_capacity_input, &view_count_output, views_.data())) {
+    LOG_ERROR("%s", err.c_str());
+    loop_->Terminate();
+    return false;
+  }
+
+  if ((view_state.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT) == 0 ||
+      (view_state.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT) == 0) {
+    return false;  // There  is no valid tracking poses for the views.
+  }
+
+  CHECK(view_count_output == view_capacity_input);
+  CHECK(view_count_output == swapchains_.size());
+
+  projection_layer_views.resize(view_count_output);
+
+  for (uint32_t i = 0; i < view_count_output; i++) {
+    auto &swapchain = swapchains_[i];
+    XrSwapchainImageAcquireInfo acquire_info{
+        XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO};
+
+    uint32_t swapchain_image_index;
+    IF_XR_FAILED (err, xrAcquireSwapchainImage(swapchain.handle, &acquire_info,
+                           &swapchain_image_index)) {
+      LOG_ERROR("%s", err.c_str());
+      loop_->Terminate();
+      return false;
+    }
+
+    XrSwapchainImageWaitInfo swapchain_wait_info{
+        XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO};
+    swapchain_wait_info.timeout = XR_INFINITE_DURATION;
+    IF_XR_FAILED (err,
+        xrWaitSwapchainImage(swapchain.handle, &swapchain_wait_info)) {
+      LOG_ERROR("%s", err.c_str());
+      loop_->Terminate();
+      return false;
+    }
+
+    projection_layer_views[i] = {XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW};
+    projection_layer_views[i].pose = views_[i].pose;
+    projection_layer_views[i].fov = views_[i].fov;
+    projection_layer_views[i].subImage.swapchain = swapchain.handle;
+    projection_layer_views[i].subImage.imageRect.offset = {0, 0};
+    projection_layer_views[i].subImage.imageRect.extent = {
+        swapchain.width, swapchain.height};
+
+    auto swapchain_image = &swapchain.images[swapchain_image_index];
+
+    {  // FIXME:
+      GLuint framebuffer;
+      glGenFramebuffers(1, &framebuffer);
+      glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+      GLuint color_texture = swapchain_image->image;
+      glViewport(projection_layer_views[i].subImage.imageRect.offset.x,
+          projection_layer_views[i].subImage.imageRect.offset.y,
+          projection_layer_views[i].subImage.imageRect.extent.width,
+          projection_layer_views[i].subImage.imageRect.extent.height);
+
+      // Create depth texture
+      GLuint depth_texture;
+      {
+        GLint width, height;
+        glBindTexture(GL_TEXTURE_2D, color_texture);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+        glGenTextures(1, &depth_texture);
+        glBindTexture(GL_TEXTURE_2D, depth_texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+            GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+      }
+
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+          GL_TEXTURE_2D, color_texture, 0);
+      glFramebufferTexture2D(
+          GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
+
+      glClearColor(0.668f, 0.785f, 0.f, 1.f);  // Wakakusa (Japanese) color
+      glClearDepthf(1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      glDeleteTextures(1, &depth_texture);
+      glDeleteFramebuffers(1, &framebuffer);
+    }
+
+    XrSwapchainImageReleaseInfo release_info{
+        XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO};
+    IF_XR_FAILED (err,
+        xrReleaseSwapchainImage(swapchain.handle, &release_info)) {
+      LOG_ERROR("%s", err.c_str());
+      loop_->Terminate();
+      return false;
+    }
+  }
+
+  return true;
 }
 
 }  // namespace zen::display_system::oculus
