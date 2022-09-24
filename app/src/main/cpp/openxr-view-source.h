@@ -1,24 +1,29 @@
 #pragma once
 
+#include "loop.h"
 #include "openxr-context.h"
 
 namespace zen::display_system::oculus {
 
-class OpenXRViewConfig {
+class OpenXRViewSource : public Loop::ISource {
  public:
   struct Swapchain;
 
-  DISABLE_MOVE_AND_COPY(OpenXRViewConfig);
-  OpenXRViewConfig(std::shared_ptr<OpenXRContext> context) : context_(context)
+  DISABLE_MOVE_AND_COPY(OpenXRViewSource);
+  OpenXRViewSource(
+      std::shared_ptr<OpenXRContext> context, std::shared_ptr<Loop> loop)
+      : context_(std::move(context)), loop_(std::move(loop))
   {
   }
-  ~OpenXRViewConfig();
+  ~OpenXRViewSource();
 
   /* Allocate view buffer and create a swapchain for each view */
   bool Init();
+  void Process() override;
 
  private:
   std::shared_ptr<OpenXRContext> context_;
+  std::shared_ptr<Loop> loop_;
 
   /**
    * The following vectors are of the same size, and items at the same index
@@ -28,7 +33,7 @@ class OpenXRViewConfig {
   std::vector<Swapchain> swapchains_;
 };
 
-struct OpenXRViewConfig::Swapchain {
+struct OpenXRViewSource::Swapchain {
   int32_t width;
   int32_t height;
   XrSwapchain handle;

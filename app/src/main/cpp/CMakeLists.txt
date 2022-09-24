@@ -77,8 +77,7 @@ add_library(
     openxr-action-source.cc
     openxr-context.cc
     openxr-event-source.cc
-    openxr-view-config.cc
-    render-source.cc
+    openxr-view-source.cc
     $<TARGET_OBJECTS:android_native_app_glue_object>
 )
 target_precompile_headers(zen_oculus_display_system PRIVATE pch.h)

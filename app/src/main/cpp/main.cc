@@ -6,8 +6,7 @@
 #include "openxr-action-source.h"
 #include "openxr-context.h"
 #include "openxr-event-source.h"
-#include "openxr-view-config.h"
-#include "render-source.h"
+#include "openxr-view-source.h"
 
 using namespace zen::display_system::oculus;
 
@@ -30,12 +29,6 @@ android_main(struct android_app *app)
       return;
     }
 
-    auto view_config = std::make_unique<OpenXRViewConfig>(context);
-    if (!view_config->Init()) {
-      LOG_ERROR("Failed to initialize OpenXR view configuration");
-      return;
-    }
-
     auto xr_event_source = std::make_shared<OpenXREventSource>(context, loop);
 
     auto action_source = std::make_shared<OpenXRActionSource>(context, loop);
@@ -44,11 +37,15 @@ android_main(struct android_app *app)
       return;
     }
 
-    auto render_source = std::make_shared<RenderSource>(context, loop);
+    auto view_source = std::make_shared<OpenXRViewSource>(context, loop);
+    if (!view_source->Init()) {
+      LOG_ERROR("Failed to initialize OpenXR view source");
+      return;
+    }
 
     loop->AddBusy(xr_event_source);
     loop->AddBusy(action_source);
-    loop->AddBusy(render_source);
+    loop->AddBusy(view_source);
 
     loop->Run();
 
