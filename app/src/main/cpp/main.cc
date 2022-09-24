@@ -7,6 +7,7 @@
 #include "openxr-context.h"
 #include "openxr-event-source.h"
 #include "openxr-view-config.h"
+#include "render-source.h"
 
 using namespace zen::display_system::oculus;
 
@@ -42,7 +43,10 @@ android_main(struct android_app *app)
     }
 
     auto xr_event_source = std::make_shared<OpenXREventSource>(context, loop);
+    auto render_source = std::make_shared<RenderSource>(context, loop);
+
     loop->AddBusy(xr_event_source);
+    loop->AddBusy(render_source);
 
     loop->Run();
 
