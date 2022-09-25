@@ -19,6 +19,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm_content)
 
+# Don't call FetchContent_MakeAvailable so that add_subdirectories is not called
+FetchContent_Declare(
+  openxr_sdk_content
+  GIT_REPOSITORY https://github.com/KhronosGroup/OpenXR-SDK.git
+  GIT_TAG release-1.0.25
+)
+if(NOT openxr_sdk_content_POPULATED)
+  FetchContent_Populate(openxr_sdk_content)
+endif()
+
 
 # android
 find_path(
@@ -88,9 +98,9 @@ target_link_libraries(
 target_include_directories(
     zen_oculus_display_system
 
-    PRIVATE ${ROOT_PROJECT_DIR}/3rdParty/OpenXR-SDK/include
+    PRIVATE ${openxr_sdk_content_SOURCE_DIR}/include
     PRIVATE ${android_native_app_glue_dir}
-    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include/
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 # For development purpose
