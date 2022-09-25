@@ -14,5 +14,8 @@
 #include <openxr/openxr_platform.h>
 #include <openxr/openxr_reflection.h>
 #include <sstream>
+#include <stdarg.h>
 #include <string>
 #include <vector>
+#include <zen/display-system/remote/client.h>
+#include <zen/display-system/remote/core/logger.h>

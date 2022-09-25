@@ -14,10 +14,17 @@ configure_file(
 include(FetchContent)
 FetchContent_Declare(
   glm_content
-  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  GIT_REPOSITORY "https://github.com/g-truc/glm.git"
   GIT_TAG 0.9.9.8
 )
-FetchContent_MakeAvailable(glm_content)
+
+set(REQUIRED_ZEN_REMOTE_DISPLAY_SYSTEM_VERSION 0.1.0.1)
+FetchContent_Declare(
+  remote_display_system_content
+  GIT_REPOSITORY "https://github.com/zigen-project/zen-remote-display-system.git"
+  GIT_TAG main
+)
+FetchContent_MakeAvailable(glm_content remote_display_system_content)
 
 # Don't call FetchContent_MakeAvailable so that add_subdirectories is not called
 FetchContent_Declare(
@@ -72,14 +79,15 @@ set_property(
 add_library(
     zen_oculus_display_system MODULE
     
+    android-logger.cc
     egl-instance.cc
-    logger-android.cc
     loop.cc
     main.cc
     openxr-action-source.cc
     openxr-context.cc
     openxr-event-source.cc
     openxr-view-source.cc
+    remote-log-sink.cc
     $<TARGET_OBJECTS:android_native_app_glue_object>
 )
 target_precompile_headers(zen_oculus_display_system PRIVATE pch.h)
@@ -87,8 +95,9 @@ target_precompile_headers(zen_oculus_display_system PRIVATE pch.h)
 target_link_libraries(
     zen_oculus_display_system
 
-    openxr_loader
     glm
+    openxr_loader
+    zen_remote_display_system::client
     ${android_library}
     ${android_log_library}
     ${egl_library}

@@ -7,8 +7,10 @@
 #include "openxr-context.h"
 #include "openxr-event-source.h"
 #include "openxr-view-source.h"
+#include "remote-log-sink.h"
 
 using namespace zen::display_system::oculus;
+namespace remote = zen::display_system::remote;
 
 void
 android_main(struct android_app *app)
@@ -18,6 +20,7 @@ android_main(struct android_app *app)
     app->activity->vm->AttachCurrentThread(&env, nullptr);
 
     InitializeLogger();
+    remote::log::InitializeLogger(std::make_unique<RemoteLogSink>());
     LOG_DEBUG("%s", GLM_VERSION_MESSAGE);
 
     auto loop = std::make_shared<Loop>(app);
@@ -39,6 +42,12 @@ android_main(struct android_app *app)
     auto view_source = std::make_shared<OpenXRViewSource>(context, loop);
     if (!view_source->Init()) {
       LOG_ERROR("Failed to initialize OpenXR view source");
+      return;
+    }
+
+    auto session = remote::client::SessionCreate();
+    if (!session->Init()) {
+      LOG_ERROR("Failed to initialize a remote session");
       return;
     }
 
