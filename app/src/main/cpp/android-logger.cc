@@ -7,10 +7,10 @@ namespace zen::display_system::oculus {
 namespace {
 
 class AndroidLogger : public ILogger {
-  virtual void Print(Severity severity, const char* /*pretty_function*/,
-      const char* /*file*/, int /*line*/, const char* format, ...) final
+  virtual void Printv(Severity severity, const char* tag,
+      const char* /*pretty_function*/, const char* /*file*/, int /*line*/,
+      const char* format, va_list args) final
   {
-    const char tag[] = "ZEN";
     android_LogPriority priority = ANDROID_LOG_INFO;
     switch (severity) {
       case ILogger::DEBUG:
@@ -32,10 +32,7 @@ class AndroidLogger : public ILogger {
         break;
     }
 
-    va_list args;
-    va_start(args, format);
     __android_log_vprint(priority, tag, format, args);
-    va_end(args);
   }
 };
 

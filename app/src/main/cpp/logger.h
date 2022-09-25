@@ -21,30 +21,42 @@ struct ILogger {
   ILogger() = default;
   virtual ~ILogger() = default;
 
-  virtual void Print(Severity severity, const char* pretty_function,
-      const char* file, int line, const char* format, ...)
-      __attribute__((__format__(printf, 6, 7))) = 0;
+  virtual void Printv(Severity severity, const char* tag,
+      const char* pretty_function, const char* file, int line,
+      const char* format, va_list args) = 0;
+
+  virtual void Print(Severity severity, const char* tag,
+      const char* pretty_function, const char* file, int line,
+      const char* format, ...)
+  {
+    va_list args;
+    va_start(args, format);
+    Printv(severity, tag, pretty_function, file, line, format, args);
+    va_end(args);
+  }
 };
 
-#define LOG_DEBUG(format, ...)                                            \
-  ILogger::instance->Print(ILogger::DEBUG, __PRETTY_FUNCTION__, __FILE__, \
-      __LINE__, format, ##__VA_ARGS__)
+constexpr char kDefaultLoggerTag[] = "ZEN[Oculus]";
 
-#define LOG_INFO(format, ...)                                            \
-  ILogger::instance->Print(ILogger::INFO, __PRETTY_FUNCTION__, __FILE__, \
-      __LINE__, format, ##__VA_ARGS__)
+#define LOG_DEBUG(format, ...)                                \
+  ILogger::instance->Print(ILogger::DEBUG, kDefaultLoggerTag, \
+      __PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
-#define LOG_WARN(format, ...)                                            \
-  ILogger::instance->Print(ILogger::WARN, __PRETTY_FUNCTION__, __FILE__, \
-      __LINE__, format, ##__VA_ARGS__)
+#define LOG_INFO(format, ...)                                \
+  ILogger::instance->Print(ILogger::INFO, kDefaultLoggerTag, \
+      __PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
-#define LOG_ERROR(format, ...)                                            \
-  ILogger::instance->Print(ILogger::ERROR, __PRETTY_FUNCTION__, __FILE__, \
-      __LINE__, format, ##__VA_ARGS__)
+#define LOG_WARN(format, ...)                                \
+  ILogger::instance->Print(ILogger::WARN, kDefaultLoggerTag, \
+      __PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
-#define LOG_FATAL(format, ...)                                            \
-  ILogger::instance->Print(ILogger::FATAL, __PRETTY_FUNCTION__, __FILE__, \
-      __LINE__, format, ##__VA_ARGS__)
+#define LOG_ERROR(format, ...)                                \
+  ILogger::instance->Print(ILogger::ERROR, kDefaultLoggerTag, \
+      __PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
+
+#define LOG_FATAL(format, ...)                                \
+  ILogger::instance->Print(ILogger::FATAL, kDefaultLoggerTag, \
+      __PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
 void InitializeLogger();
 
