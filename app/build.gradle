@@ -62,70 +62,7 @@ android {
     }
 }
 
-task bootstrapBoost {
-    def b2 = new File("${rootProject.projectDir}/3rdParty/boost/b2")
-    if (b2.exists()) {
-        return
-    }
-
-    doLast {
-        exec {
-            workingDir "${rootProject.projectDir}/3rdParty/boost"
-            commandLine './bootstrap.sh'
-        }
-    }
+task cleanCxx(type: Delete) {
+  delete "${projectDir}/.cxx"
 }
-
-task createBoostUserConfig {
-    def boostUserConfig = new File("${buildDir}/boost/user-config.jam")
-    if (boostUserConfig.exists()) {
-        return
-    }
-
-    doLast {
-        new File("${buildDir}/boost").mkdir()
-
-        OperatingSystem os = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.currentOperatingSystem; 
-        def HOST_TAG = "unknown"
-        if (os.isLinux()) {
-            HOST_TAG = "linux-x86_64"
-        } else if(os.isMacOsX()) {
-            HOST_TAG = "darwin-x86_64"
-        } else {
-            throw new org.gradle.api.GradleException("${os.getDisplayName()} is not supported")
-        }
-        
-
-        boostUserConfig.write(
-"""using clang
-: android
-: ${android.ndkDirectory}/toolchains/llvm/prebuilt/${HOST_TAG}/bin/aarch64-linux-android29-clang++
-;
-""")
-
-    }
-}
-
-task buildBoost {
-    if (new File("${buildDir}/boost/include").exists()) {
-        return;
-    }
-
-    dependsOn bootstrapBoost
-    dependsOn createBoostUserConfig
-
-    doLast {
-        exec {
-            workingDir  "${rootProject.projectDir}/3rdParty/boost"
-            executable  "./b2"
-            args        "install", 
-                        "--with-headers",
-                        "toolset=clang",
-                        "target-os=android",
-                        "link=static",
-                        "--user-config=${buildDir}/boost/user-config.jam",
-                        "--prefix=${buildDir}/boost"
-        }
-    }
-}
-preBuild.dependsOn buildBoost;
+clean.dependsOn cleanCxx;

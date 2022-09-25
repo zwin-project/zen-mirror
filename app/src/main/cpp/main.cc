@@ -18,7 +18,6 @@ android_main(struct android_app *app)
     app->activity->vm->AttachCurrentThread(&env, nullptr);
 
     InitializeLogger();
-    LOG_DEBUG("Boost Version %d", BOOST_VERSION);
     LOG_DEBUG("%s", GLM_VERSION_MESSAGE);
 
     auto loop = std::make_shared<Loop>(app);

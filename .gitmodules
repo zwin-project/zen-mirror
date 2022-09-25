@@ -1,6 +1,3 @@
-[submodule "3rdParty/boost"]
-	path = 3rdParty/boost
-	url = https://github.com/boostorg/boost.git
 [submodule "3rdParty/OpenXR-SDK"]
 	path = 3rdParty/OpenXR-SDK
 	url = https://github.com/KhronosGroup/OpenXR-SDK.git
