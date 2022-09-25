@@ -13,6 +13,7 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/include/config.h
 )
 
+
 # android
 find_path(
     android_native_app_glue_dir 
@@ -30,9 +31,11 @@ add_library(
 ## suppress warning
 target_compile_options(android_native_app_glue_object PRIVATE -w)
 
+
 # OpenGLES v3
 find_library(opengles_v3_library NAMES GLESv3 REQUIRED)
 find_library(egl_library NAMES EGL REQUIRED)
+
 
 # OpenXR loader
 set(OPENXR_BUILD_TYPE "Release") 
@@ -48,23 +51,6 @@ set_property(
         ${OVR_OPENXR_MOBILE_SDK_DIR}/OpenXR/Libs/Android/${ANDROID_ABI}/${OPENXR_BUILD_TYPE}/libopenxr_loader.so
 )
 
-# Setup Boost
-set(Boost_VERSION 1.80.0)
-set(Boost_CMAKE_DIR ${PROJECT_DIR}/build/boost/lib/cmake)
-
-## Search for all available component-configuration directories
-file(GLOB all_components LIST_DIRECTORIES true 
-    RELATIVE ${Boost_CMAKE_DIR} ${Boost_CMAKE_DIR}/boost_*-${Boost_VERSION})
-## ...and extract components names from it.
-string(REGEX REPLACE "boost_([_a-z0-9]+)-${Boost_VERSION}" "\\1"
-    all_components "${all_components}")
-
-set(Boost_DIR ${Boost_CMAKE_DIR}/Boost-${Boost_VERSION})
-foreach(component IN LISTS all_components)
-    set(boost_${component}_DIR ${Boost_CMAKE_DIR}/boost_${component}-${Boost_VERSION})
-endforeach()
-
-find_package(Boost CONFIG REQUIRED)
 
 # main target
 add_library(
@@ -98,7 +84,6 @@ target_include_directories(
 
     PRIVATE ${ROOT_PROJECT_DIR}/3rdParty/OpenXR-SDK/include
     PRIVATE ${android_native_app_glue_dir}
-    PRIVATE ${Boost_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include/
 )
 
