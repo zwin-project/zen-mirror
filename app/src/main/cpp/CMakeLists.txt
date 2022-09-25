@@ -6,12 +6,18 @@ message(STATUS "Using CMake version: ${CMAKE_VERSION}")
 add_definitions(-DXR_USE_PLATFORM_ANDROID)
 add_definitions(-DXR_USE_GRAPHICS_API_OPENGL_ES)
 
-add_subdirectory(${ROOT_PROJECT_DIR}/3rdParty/glm binary_dir)
-
 configure_file(
     ${CMAKE_CURRENT_LIST_DIR}/config.h.in 
     ${CMAKE_CURRENT_BINARY_DIR}/include/config.h
 )
+
+include(FetchContent)
+FetchContent_Declare(
+  glm_content
+  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  GIT_TAG 0.9.9.8
+)
+FetchContent_MakeAvailable(glm_content)
 
 
 # android
