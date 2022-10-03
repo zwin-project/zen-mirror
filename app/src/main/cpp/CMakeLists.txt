@@ -18,7 +18,7 @@ FetchContent_Declare(
   GIT_TAG 0.9.9.8
 )
 
-set(REQUIRED_ZEN_REMOTE_DISPLAY_SYSTEM_VERSION 0.1.0.1)
+set(REQUIRED_ZEN_REMOTE_DISPLAY_SYSTEM_VERSION 0.1.0.2)
 FetchContent_Declare(
   remote_display_system_content
   GIT_REPOSITORY "https://github.com/zigen-project/zen-remote-display-system.git"
@@ -88,6 +88,7 @@ add_library(
     openxr-event-source.cc
     openxr-view-source.cc
     remote-log-sink.cc
+    remote-loop.cc
     $<TARGET_OBJECTS:android_native_app_glue_object>
 )
 target_precompile_headers(zen_oculus_display_system PRIVATE pch.h)
