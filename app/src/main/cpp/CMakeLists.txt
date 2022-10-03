@@ -17,14 +17,13 @@ FetchContent_Declare(
   GIT_REPOSITORY "https://github.com/g-truc/glm.git"
   GIT_TAG 0.9.9.8
 )
+FetchContent_MakeAvailable(glm_content)
 
 set(REQUIRED_ZEN_REMOTE_DISPLAY_SYSTEM_VERSION 0.1.0.2)
-FetchContent_Declare(
-  remote_display_system_content
-  GIT_REPOSITORY "https://github.com/zigen-project/zen-remote-display-system.git"
-  GIT_TAG main
+add_subdirectory(
+  ${PROJECT_DIR}/3rdParty/zen-remote-display-system
+  zen-remote-display-system
 )
-FetchContent_MakeAvailable(glm_content remote_display_system_content)
 
 # Don't call FetchContent_MakeAvailable so that add_subdirectories is not called
 FetchContent_Declare(
