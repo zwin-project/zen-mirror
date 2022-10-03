@@ -8,6 +8,7 @@
 #include "openxr-event-source.h"
 #include "openxr-view-source.h"
 #include "remote-log-sink.h"
+#include "remote-loop.h"
 
 using namespace zen::display_system::oculus;
 namespace remote = zen::display_system::remote;
@@ -45,11 +46,13 @@ android_main(struct android_app *app)
       return;
     }
 
-    auto session = remote::client::SessionCreate();
-    if (!session->Init()) {
-      LOG_ERROR("Failed to initialize a remote session");
-      return;
+    std::unique_ptr<zen::display_system::remote::client::IRemote> remote;
+    {
+      auto remote_loop = std::make_unique<RemoteLoop>(loop);
+      remote = remote::client::CreateRemote(std::move(remote_loop));
     }
+
+    remote->Start();
 
     loop->AddBusy(xr_event_source);
     loop->AddBusy(action_source);
