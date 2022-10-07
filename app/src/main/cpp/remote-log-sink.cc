@@ -5,25 +5,25 @@
 namespace zen::display_system::oculus {
 
 void
-RemoteLogSink::Sink(remote::log::Severity remote_severity,
+RemoteLogSink::Sink(remote::Severity remote_severity,
     const char* pretty_function, const char* file, int line, const char* format,
     va_list vp)
 {
   ILogger::Severity severity = ILogger::Severity::INFO;
   switch (remote_severity) {
-    case remote::log::DEBUG:
+    case remote::Severity::DEBUG:
       severity = ILogger::DEBUG;
       break;
-    case remote::log::INFO:
+    case remote::Severity::INFO:
       severity = ILogger::INFO;
       break;
-    case remote::log::WARN:
+    case remote::Severity::WARN:
       severity = ILogger::WARN;
       break;
-    case remote::log::ERROR:
+    case remote::Severity::ERROR:
       severity = ILogger::ERROR;
       break;
-    case remote::log::FATAL:
+    case remote::Severity::FATAL:
       severity = ILogger::FATAL;
       break;
     default:

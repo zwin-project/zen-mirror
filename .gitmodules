@@ -1,3 +1,3 @@
-[submodule "app/3rdParty/zen-remote-display-system"]
-	path = app/3rdParty/zen-remote-display-system
-	url = https://github.com/zigen-project/zen-remote-display-system.git
+[submodule "app/3rdParty/zen-remote"]
+	path = app/3rdParty/zen-remote
+	url = https://github.com/zigen-project/zen-remote.git
