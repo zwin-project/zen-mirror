@@ -19,7 +19,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm_content)
 
-set(REQUIRED_ZEN_REMOTE_DISPLAY_SYSTEM_VERSION 0.1.0.2)
+set(REQUIRED_ZEN_REMOTE_VERSION 0.1.0.2)
 add_subdirectory(
   ${PROJECT_DIR}/3rdParty/zen-remote
   zen-remote
@@ -97,7 +97,7 @@ target_link_libraries(
 
     glm
     openxr_loader
-    zen_remote_display_system::client
+    zen_remote::client
     ${android_library}
     ${android_log_library}
     ${egl_library}
