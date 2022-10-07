@@ -11,7 +11,6 @@
 #include "remote-loop.h"
 
 using namespace zen::display_system::oculus;
-namespace remote = zen::display_system::remote;
 
 void
 android_main(struct android_app *app)
@@ -21,7 +20,7 @@ android_main(struct android_app *app)
     app->activity->vm->AttachCurrentThread(&env, nullptr);
 
     InitializeLogger();
-    remote::log::InitializeLogger(std::make_unique<RemoteLogSink>());
+    zen::remote::InitializeLogger(std::make_unique<RemoteLogSink>());
     LOG_DEBUG("%s", GLM_VERSION_MESSAGE);
 
     auto loop = std::make_shared<Loop>(app);
@@ -46,10 +45,10 @@ android_main(struct android_app *app)
       return;
     }
 
-    std::unique_ptr<zen::display_system::remote::client::IRemote> remote;
+    std::unique_ptr<zen::remote::IRemote> remote;
     {
       auto remote_loop = std::make_unique<RemoteLoop>(loop);
-      remote = remote::client::CreateRemote(std::move(remote_loop));
+      remote = zen::remote::CreateRemote(std::move(remote_loop));
     }
 
     remote->Start();

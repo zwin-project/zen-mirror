@@ -21,8 +21,8 @@ FetchContent_MakeAvailable(glm_content)
 
 set(REQUIRED_ZEN_REMOTE_DISPLAY_SYSTEM_VERSION 0.1.0.2)
 add_subdirectory(
-  ${PROJECT_DIR}/3rdParty/zen-remote-display-system
-  zen-remote-display-system
+  ${PROJECT_DIR}/3rdParty/zen-remote
+  zen-remote
 )
 
 # Don't call FetchContent_MakeAvailable so that add_subdirectories is not called

@@ -12,11 +12,10 @@ jobs:
   lint-build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Clone Oculus OpenXR SDK (private)
+      - name: Clone Oculus OpenXR SDK
         uses: actions/checkout@v2
         with:
           repository: zigen-project/oculus-openxr-mobile-sdk
-          ssh-key: ${{ secrets.DEPLOY_KEY_OCULUS_OPENXR_MOBILE_SDK }}
           path: ovr_openxr_mobile_sdk
       
       - name: Checkout
