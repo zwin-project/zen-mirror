@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  NDK_VERSION: 25.1.8937393
+
 jobs:
   lint-build:
     runs-on: ubuntu-22.04
@@ -18,6 +21,26 @@ jobs:
           repository: zigen-project/oculus-openxr-mobile-sdk
           path: ovr_openxr_mobile_sdk
       
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install meson
+      
+      - name: Clone grpc-dev
+        uses: actions/checkout@v2
+        with:
+          repository: zigen-project/grpc-dev
+          path: grpc-dev
+          submodules: recursive
+          ref: 'v1.49.1' 
+      
+      - name: Build grpc-dev
+        working-directory: ./grpc-dev
+        run: |
+          echo "ndk_version := $NDK_VERSION" > local.mk
+          echo "ndk_dir     := /usr/local/lib/android/sdk/ndk/$NDK_VERSION" >> local.mk
+          make
+      
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -25,14 +48,22 @@ jobs:
           submodules: recursive
 
       - name: ClangFormat Check
-        run: find . -regex "^\.\/app/src/main/cpp/.*\.\(h\|cpp\)" | xargs clang-format-14 --dry-run -Werror
         working-directory: ./main
+        run: find . -regex "^\.\/app/src/main/cpp/.*\.\(h\|cpp\)" | xargs clang-format-14 --dry-run -Werror
 
       - name: Gradle build
+        working-directory: ./main
         run: |
           echo "ovr_openxr_mobile_sdk.dir=$GITHUB_WORKSPACE/ovr_openxr_mobile_sdk" > local.properties
+          echo "ndk.version = $NDK_VERSION" >> local.properties
+
+          echo "protoc          = $GITHUB_WORKSPACE/grpc-dev/native/Debug/bin/protoc" >> local.properties
+          echo "grpc_cpp_plugin = $GITHUB_WORKSPACE/grpc-dev/native/Debug/bin/grpc_cpp_plugin" >> local.properties
+          echo "grpc_sysroot    = $GITHUB_WORKSPACE/grpc-dev/android/24/arm64-v8a/$NDK_VERSION/Debug" >> local.properties
+
+          echo "cmake.dir = $ANDROID_SDK_ROOT/cmake/3.22.1" >> local.properties
+
           ./gradlew build
-        working-directory: ./main
 
       - name: Upload results Artifact
         uses: actions/upload-artifact@v2

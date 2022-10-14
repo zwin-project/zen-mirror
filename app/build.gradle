@@ -5,8 +5,17 @@ plugins {
 def properties = new Properties();
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
+ext.getRequiredProperty = { key ->
+  def value = properties.getProperty(key)
+  if (!value) {
+    throw new org.gradle.api.GradleException("Property '${key}' not found")
+  }
+  return value
+}
+
 android {
     compileSdk 29
+    ndkVersion getRequiredProperty("ndk.version")
 
     defaultConfig {
         applicationId "io.zigen.zen.oculus_display_system"
@@ -17,17 +26,10 @@ android {
 
 
         externalNativeBuild {
-            def ovrOpenXrMobileSdkPropertyKey = "ovr_openxr_mobile_sdk.dir"
-            def ovrOpenXrMobileSdkDir = properties.getProperty(ovrOpenXrMobileSdkPropertyKey)
-            if (!ovrOpenXrMobileSdkDir) {
-                throw new org.gradle.api.GradleException("${ovrOpenXrMobileSdkPropertyKey} not found")
-            }
-
-            def ccFlags = [
-                '-Werror', '-Wall', '-Winvalid-pch', '-Wextra', '-Wpedantic',
-                '-Wno-gnu-zero-variadic-macro-arguments',
-                '-Wno-missing-field-initializers'
-            ]
+            def ovrOpenXrMobileSdkDir = getRequiredProperty("ovr_openxr_mobile_sdk.dir")
+            def protoc = getRequiredProperty("protoc")
+            def grpcCppPlugin = getRequiredProperty("grpc_cpp_plugin")
+            def grpcSysroot = getRequiredProperty("grpc_sysroot")
 
             ndk {
                 abiFilters 'arm64-v8a'
@@ -36,9 +38,11 @@ android {
             cmake {
                 arguments "-DPROJECT_DIR:STRING=${projectDir}",
                     "-DOVR_OPENXR_MOBILE_SDK_DIR:STRING=${ovrOpenXrMobileSdkDir}",
+                    "-DZEN_REMOTE_PROTOC_EXECUTABLE:STRING=${protoc}",
+                    "-DZEN_REMOTE_GRPC_CPP_PLUGIN_EXECUTABLE:STRING=${grpcCppPlugin}",
+                    "-DZEN_REMOTE_GRPC_SYSROOT:STRING=${grpcSysroot}",
+                    "-DZEN_REMOTE_TEST_CLIENT:STRING=OFF",
                     "-DAPP_NAME:STRING=${rootProject.getName()}"
-                cppFlags += ccFlags + ['-std=c++17']
-                cFlags   += ccFlags + ['-std=c11']
             }
         }
     }
