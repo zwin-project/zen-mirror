@@ -20,7 +20,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm_content)
 
-set(ZEN_REMOTE_REQUIRED_VERSION 0.1.0.5)
+set(ZEN_REMOTE_REQUIRED_VERSION 0.1.0.6)
 add_subdirectory(
   ${PROJECT_DIR}/3rdParty/zen-remote
   zen-remote

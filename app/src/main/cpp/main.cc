@@ -45,10 +45,10 @@ android_main(struct android_app *app)
       return;
     }
 
-    std::unique_ptr<zen::remote::IRemote> remote;
+    std::unique_ptr<zen::remote::client::IRemote> remote;
     {
       auto remote_loop = std::make_unique<RemoteLoop>(loop);
-      remote = zen::remote::CreateRemote(std::move(remote_loop));
+      remote = zen::remote::client::CreateRemote(std::move(remote_loop));
     }
 
     remote->Start();
