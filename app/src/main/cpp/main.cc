@@ -52,6 +52,7 @@ android_main(struct android_app *app)
     }
 
     remote->Start();
+    remote->pool()->Traverse([](auto) {});
 
     loop->AddBusy(xr_event_source);
     loop->AddBusy(action_source);
