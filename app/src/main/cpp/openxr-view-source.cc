@@ -257,6 +257,8 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
 
   projection_layer_views.resize(view_count_output);
 
+  remote_->UpdateScene();
+
   for (uint32_t i = 0; i < view_count_output; i++) {
     auto &swapchain = swapchains_[i];
     XrSwapchainImageAcquireInfo acquire_info{
@@ -290,50 +292,58 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
 
     auto swapchain_image = &swapchain.images[swapchain_image_index];
 
-    {  // FIXME:
-      GLuint framebuffer;
-      glGenFramebuffers(1, &framebuffer);
-      glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    GLuint framebuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-      GLuint color_texture = swapchain_image->image;
-      glViewport(projection_layer_views[i].subImage.imageRect.offset.x,
-          projection_layer_views[i].subImage.imageRect.offset.y,
-          projection_layer_views[i].subImage.imageRect.extent.width,
-          projection_layer_views[i].subImage.imageRect.extent.height);
+    GLuint color_texture = swapchain_image->image;
 
-      // Create depth texture
-      GLuint depth_texture;
-      {
-        GLint width, height;
-        glBindTexture(GL_TEXTURE_2D, color_texture);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    // Create depth texture
+    GLuint depth_texture;
+    {
+      GLint width, height;
+      glBindTexture(GL_TEXTURE_2D, color_texture);
+      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
 
-        glGenTextures(1, &depth_texture);
-        glBindTexture(GL_TEXTURE_2D, depth_texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
-            GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
+      glGenTextures(1, &depth_texture);
+      glBindTexture(GL_TEXTURE_2D, depth_texture);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+          GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
 
-        glBindTexture(GL_TEXTURE_2D, 0);
-      }
-
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-          GL_TEXTURE_2D, color_texture, 0);
-      glFramebufferTexture2D(
-          GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
-
-      glClearColor(0.668f, 0.785f, 0.f, 1.f);  // Wakakusa (Japanese) color
-      glClearDepthf(1.0f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-      glDeleteTextures(1, &depth_texture);
-      glDeleteFramebuffers(1, &framebuffer);
+      glBindTexture(GL_TEXTURE_2D, 0);
     }
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
+
+    auto proj = Math::ToProjectionMatrix(views_[i].fov, 0.05, 1000.0);
+    auto position = Math::ToGlm(views_[i].pose.position);
+    auto orientation = Math::ToGlm(views_[i].pose.orientation);
+    auto view = glm::mat4(1.0);
+    view = glm::translate(view, -position);
+    view = glm::toMat4(glm::inverse(orientation)) * view;
+    auto vp = proj * view;
+
+    glViewport(0, 0, swapchain.width, swapchain.height);
+
+    glClearColor(0.668f, 0.785f, 0.f, 1.f);  // Wakakusa (Japanese) color
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    zen::remote::client::Camera camera;
+    memcpy(&camera.vp, &vp, sizeof(vp));
+
+    remote_->Render(&camera);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteTextures(1, &depth_texture);
+    glDeleteFramebuffers(1, &framebuffer);
 
     XrSwapchainImageReleaseInfo release_info{
         XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO};

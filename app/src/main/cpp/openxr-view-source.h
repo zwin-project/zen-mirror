@@ -10,9 +10,12 @@ class OpenXRViewSource : public Loop::ISource {
   struct Swapchain;
 
   DISABLE_MOVE_AND_COPY(OpenXRViewSource);
-  OpenXRViewSource(
-      std::shared_ptr<OpenXRContext> context, std::shared_ptr<Loop> loop)
-      : context_(std::move(context)), loop_(std::move(loop))
+  OpenXRViewSource(std::shared_ptr<OpenXRContext> context,
+      std::shared_ptr<Loop> loop,
+      std::unique_ptr<zen::remote::client::IRemote> remote)
+      : context_(std::move(context)),
+        loop_(std::move(loop)),
+        remote_(std::move(remote))
   {
   }
   ~OpenXRViewSource();
@@ -30,6 +33,7 @@ class OpenXRViewSource : public Loop::ISource {
 
   std::shared_ptr<OpenXRContext> context_;
   std::shared_ptr<Loop> loop_;
+  std::unique_ptr<zen::remote::client::IRemote> remote_;
 
   /**
    * The following vectors are of the same size, and items at the same index
