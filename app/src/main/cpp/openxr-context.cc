@@ -280,7 +280,7 @@ OpenXRContext::InitializeAppSpace()
   CHECK(session_ != XR_NULL_HANDLE);
 
   glm::vec3 position(0, 0, 0);
-  glm::quat orientation(0, 0, 0, 1);
+  glm::quat orientation(1, 0, 0, 0);
   XrReferenceSpaceCreateInfo reference_space_create_info{
       XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
   reference_space_create_info.poseInReferenceSpace =

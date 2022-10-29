@@ -55,25 +55,63 @@ CheckXrResult(XrResult res, const char *originator, const char *source_location)
 namespace Math {
 
 inline XrQuaternionf
-ToXrQuaternionf(glm::quat orientation)
+ToXr(glm::quat quat)
 {
-  return XrQuaternionf{
-      orientation.x, orientation.y, orientation.z, orientation.w};
+  return XrQuaternionf{quat.x, quat.y, quat.z, quat.w};
+}
+
+inline glm::quat
+ToGlm(XrQuaternionf quat)
+{
+  return glm::quat(quat.w, quat.x, quat.y, quat.z);
 }
 
 inline XrVector3f
-ToXrVector3f(glm::vec3 position)
+ToXr(glm::vec3 vec)
 {
-  return XrVector3f{position.x, position.y, position.z};
+  return XrVector3f{vec.x, vec.y, vec.z};
+}
+
+inline glm::vec3
+ToGlm(XrVector3f vec)
+{
+  return glm::vec3(vec.x, vec.y, vec.z);
 }
 
 inline XrPosef
 ToXrPosef(glm::vec3 position, glm::quat orientation)
 {
   return XrPosef{
-      ToXrQuaternionf(orientation),
-      ToXrVector3f(position),
+      ToXr(orientation),
+      ToXr(position),
   };
+}
+
+inline glm::mat4
+ToProjectionMatrix(XrFovf fov, float near, float far)
+{
+  const float tanLeft = tanf(fov.angleLeft);
+  const float tanRight = tanf(fov.angleRight);
+  const float tanDown = tanf(fov.angleDown);
+  const float tanUp = tanf(fov.angleUp);
+
+  const float tanWidth = tanRight - tanLeft;
+  const float tanHeight = tanUp - tanDown;
+
+  const float a = 2 / tanWidth;
+  const float b = (tanRight + tanLeft) / tanWidth;
+  const float c = 2 / tanHeight;
+  const float d = (tanUp + tanDown) / tanHeight;
+  const float e = far / (near - far);
+  const float f = e * near;
+
+  // [0, 1] Z clip space, col major
+  return glm::mat4(  //
+      a, 0, 0, 0,    //
+      0, c, 0, 0,    //
+      b, d, e, -1,   //
+      0, 0, f, 0     //
+  );
 }
 
 }  // namespace Math

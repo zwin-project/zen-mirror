@@ -41,7 +41,6 @@ android {
                     "-DZEN_REMOTE_PROTOC_EXECUTABLE:STRING=${protoc}",
                     "-DZEN_REMOTE_GRPC_CPP_PLUGIN_EXECUTABLE:STRING=${grpcCppPlugin}",
                     "-DZEN_REMOTE_GRPC_SYSROOT:STRING=${grpcSysroot}",
-                    "-DZEN_REMOTE_TEST_CLIENT:STRING=OFF",
                     "-DAPP_NAME:STRING=${rootProject.getName()}"
             }
         }
