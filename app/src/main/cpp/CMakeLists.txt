@@ -21,7 +21,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glm_content)
 
 # zen-remote
-set(ZEN_REMOTE_REQUIRED_VERSION 0.1.0.9)
+set(ZEN_REMOTE_REQUIRED_VERSION 0.1.0.10)
 set(ZEN_REMOTE_SERVER OFF)
 set(ZEN_REMOTE_CLIENT ON)
 add_subdirectory(
