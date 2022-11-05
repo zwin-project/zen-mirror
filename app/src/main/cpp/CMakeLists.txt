@@ -24,6 +24,7 @@ FetchContent_MakeAvailable(glm_content)
 set(ZEN_REMOTE_REQUIRED_VERSION 0.1.0.9)
 set(ZEN_REMOTE_SERVER OFF)
 set(ZEN_REMOTE_CLIENT ON)
+set(ZEN_REMOTE_GRAPHICS_API GLESv3)
 add_subdirectory(
   ${PROJECT_DIR}/3rdParty/zen-remote
   zen-remote
