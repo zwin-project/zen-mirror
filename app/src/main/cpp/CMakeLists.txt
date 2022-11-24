@@ -12,16 +12,8 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/include/config.h
 )
 
-include(FetchContent)
-FetchContent_Declare(
-  glm_content
-  GIT_REPOSITORY "https://github.com/g-truc/glm.git"
-  GIT_TAG 0.9.9.8
-)
-FetchContent_MakeAvailable(glm_content)
-
 # zen-remote
-set(ZEN_REMOTE_REQUIRED_VERSION 0.1.0.9)
+set(ZEN_REMOTE_REQUIRED_VERSION 0.1.0.20)
 set(ZEN_REMOTE_SERVER OFF)
 set(ZEN_REMOTE_CLIENT ON)
 set(ZEN_REMOTE_GRAPHICS_API GLESv3)
@@ -31,6 +23,7 @@ add_subdirectory(
 )
 
 # Don't call FetchContent_MakeAvailable so that add_subdirectories is not called
+include(FetchContent)
 FetchContent_Declare(
   openxr_sdk_content
   GIT_REPOSITORY https://github.com/KhronosGroup/OpenXR-SDK.git
