@@ -9,7 +9,11 @@ namespace zen::display_system::oculus {
 class OpenXRContext {
  public:
   DISABLE_MOVE_AND_COPY(OpenXRContext);
-  OpenXRContext(std::shared_ptr<Loop> loop) : loop_(std::move(loop)) {}
+  OpenXRContext(std::shared_ptr<Loop> loop,
+      std::shared_ptr<zen::remote::client::IRemote> remote)
+      : loop_(std::move(loop)), remote_(std::move(remote))
+  {
+  }
   ~OpenXRContext();
 
   /* Initialize OpenXRContext */
@@ -80,6 +84,7 @@ class OpenXRContext {
   XrEnvironmentBlendMode environment_blend_mode_{};
   std::unique_ptr<EglInstance> egl_;
   std::shared_ptr<Loop> loop_;
+  std::shared_ptr<zen::remote::client::IRemote> remote_;
 };
 
 inline XrInstance

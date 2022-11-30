@@ -25,7 +25,12 @@ android_main(struct android_app *app)
 
     auto loop = std::make_shared<Loop>(app);
 
-    auto context = std::make_shared<OpenXRContext>(loop);
+    std::shared_ptr<zen::remote::client::IRemote> remote =
+        zen::remote::client::CreateRemote(std::make_unique<RemoteLoop>(loop));
+
+    remote->StartGrpcServer();
+
+    auto context = std::make_shared<OpenXRContext>(loop, remote);
     if (!context->Init(app)) {
       LOG_ERROR("Failed to initialize OpenXR context");
       return;
@@ -40,13 +45,7 @@ android_main(struct android_app *app)
     }
 
     std::shared_ptr<OpenXRViewSource> view_source;
-    {
-      auto remote_loop = std::make_unique<RemoteLoop>(loop);
-      auto remote = zen::remote::client::CreateRemote(std::move(remote_loop));
-      remote->Start();
-      view_source =
-          std::make_shared<OpenXRViewSource>(context, loop, std::move(remote));
-    }
+    view_source = std::make_shared<OpenXRViewSource>(context, loop, remote);
 
     if (!view_source->Init()) {
       LOG_ERROR("Failed to initialize OpenXR view source");
