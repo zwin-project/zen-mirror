@@ -12,7 +12,7 @@ class OpenXRViewSource : public Loop::ISource {
   DISABLE_MOVE_AND_COPY(OpenXRViewSource);
   OpenXRViewSource(std::shared_ptr<OpenXRContext> context,
       std::shared_ptr<Loop> loop,
-      std::unique_ptr<zen::remote::client::IRemote> remote)
+      std::shared_ptr<zen::remote::client::IRemote> remote)
       : context_(std::move(context)),
         loop_(std::move(loop)),
         remote_(std::move(remote))
@@ -33,7 +33,7 @@ class OpenXRViewSource : public Loop::ISource {
 
   std::shared_ptr<OpenXRContext> context_;
   std::shared_ptr<Loop> loop_;
-  std::unique_ptr<zen::remote::client::IRemote> remote_;
+  std::shared_ptr<zen::remote::client::IRemote> remote_;
 
   /**
    * The following vectors are of the same size, and items at the same index

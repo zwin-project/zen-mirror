@@ -69,6 +69,7 @@ OpenXRContext::UpdateSessionState(XrSessionState state, XrTime time)
         loop_->Terminate();
       }
       is_session_running_ = true;
+      remote_->EnableSession();
       break;
     }
 
@@ -78,6 +79,7 @@ OpenXRContext::UpdateSessionState(XrSessionState state, XrTime time)
         loop_->Terminate();
       }
       is_session_running_ = false;
+      remote_->DisableSession();
       break;
     }
 
