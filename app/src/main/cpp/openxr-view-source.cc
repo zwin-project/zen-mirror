@@ -13,6 +13,14 @@ OpenXRViewSource::~OpenXRViewSource()
   }
 }
 
+OpenXRViewSource::SwapchainFramebuffer::~SwapchainFramebuffer()
+{
+  if (framebuffer != 0) glDeleteFramebuffers(1, &framebuffer);
+  if (color_texture != 0) glDeleteTextures(1, &color_texture);
+  if (depth_buffer != 0) glDeleteRenderbuffers(1, &depth_buffer);
+  if (resolve_framebuffer != 0) glDeleteFramebuffers(1, &resolve_framebuffer);
+}
+
 bool
 OpenXRViewSource::Init()
 {
@@ -161,7 +169,51 @@ OpenXRViewSource::Init()
       return false;
     }
 
-    swapchains_.push_back(swapchain);
+    swapchain.framebuffers.resize(swapchain.images.size());
+
+    for (uint i = 0; i < swapchain.images.size(); i++) {
+      GLuint framebuffer, resolve_framebuffer, color_texture, depth_buffer;
+
+      glGenFramebuffers(1, &resolve_framebuffer);
+      glBindFramebuffer(GL_FRAMEBUFFER, resolve_framebuffer);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+          GL_TEXTURE_2D, swapchain.images[i].image, 0);
+
+      glGenFramebuffers(1, &framebuffer);
+      glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+      glGenTextures(1, &color_texture);
+      glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, color_texture);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4,
+          color_swapchain_format, swapchain.width, swapchain.height, GL_TRUE);
+
+      glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+      glGenRenderbuffers(1, &depth_buffer);
+      glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
+      glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT24,
+          swapchain.width, swapchain.height);
+
+      glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+          GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0);
+      glFramebufferRenderbuffer(
+          GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);
+
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      swapchain.framebuffers[i].framebuffer = framebuffer;
+      swapchain.framebuffers[i].color_texture = color_texture;
+      swapchain.framebuffers[i].depth_buffer = depth_buffer;
+      swapchain.framebuffers[i].resolve_framebuffer = resolve_framebuffer;
+    }
+
+    swapchains_.emplace_back(std::move(swapchain));
   }
 
   // Resize view buffer for xrLocateViews later.
@@ -290,38 +342,12 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
     projection_layer_views[i].subImage.imageRect.extent = {
         swapchain.width, swapchain.height};
 
-    auto swapchain_image = &swapchain.images[swapchain_image_index];
+    auto framebuffer =
+        swapchain.framebuffers[swapchain_image_index].framebuffer;
+    auto resolve_framebuffer =
+        swapchain.framebuffers[swapchain_image_index].resolve_framebuffer;
 
-    GLuint framebuffer;
-    glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-    GLuint color_texture = swapchain_image->image;
-
-    // Create depth texture
-    GLuint depth_texture;
-    {
-      GLint width, height;
-      glBindTexture(GL_TEXTURE_2D, color_texture);
-      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-
-      glGenTextures(1, &depth_texture);
-      glBindTexture(GL_TEXTURE_2D, depth_texture);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
-          GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
-
-      glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
 
     auto proj = Math::ToProjectionMatrix(views_[i].fov, 0.05, 1000.0);
     auto position = Math::ToGlm(views_[i].pose.position);
@@ -342,8 +368,13 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
     remote_->Render(&camera);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteTextures(1, &depth_texture);
-    glDeleteFramebuffers(1, &framebuffer);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolve_framebuffer);
+    glBlitFramebuffer(0, 0, swapchain.width, swapchain.height, 0, 0,
+        swapchain.width, swapchain.height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     XrSwapchainImageReleaseInfo release_info{
         XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO};
