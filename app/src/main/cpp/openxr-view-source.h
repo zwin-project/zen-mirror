@@ -8,6 +8,7 @@ namespace zen::display_system::oculus {
 class OpenXRViewSource : public Loop::ISource {
  public:
   struct Swapchain;
+  struct SwapchainFramebuffer;
 
   DISABLE_MOVE_AND_COPY(OpenXRViewSource);
   OpenXRViewSource(std::shared_ptr<OpenXRContext> context,
@@ -48,6 +49,15 @@ struct OpenXRViewSource::Swapchain {
   int32_t height;
   XrSwapchain handle;
   std::vector<XrSwapchainImageOpenGLESKHR> images;
+  std::vector<SwapchainFramebuffer> framebuffers;
+};
+
+struct OpenXRViewSource::SwapchainFramebuffer {
+  ~SwapchainFramebuffer();
+  GLuint framebuffer = 0;
+  GLuint color_texture = 0;
+  GLuint depth_buffer = 0;
+  GLuint resolve_framebuffer = 0;
 };
 
 }  // namespace zen::display_system::oculus
