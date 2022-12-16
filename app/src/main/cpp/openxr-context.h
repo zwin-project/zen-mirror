@@ -22,6 +22,9 @@ class OpenXRContext {
   /* Handle session state update */
   void UpdateSessionState(XrSessionState state, XrTime time);
 
+  /* Create a new app space and store it in the context */
+  bool InitializeAppSpace(XrTime time);
+
   inline XrInstance instance();
   inline XrSystemId system_id();
   inline XrSession session();
@@ -45,9 +48,6 @@ class OpenXRContext {
 
   /* Create a new XrSession and store it in the context */
   bool InitializeSession();
-
-  /* Create a new app space and store it in the context */
-  bool InitializeAppSpace();
 
   /* Write out available view configurations, determine the view config type
    * to use and store it in the context */

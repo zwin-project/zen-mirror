@@ -236,6 +236,13 @@ OpenXRViewSource::Process()
     return;
   }
 
+  if (context_->app_space() == XR_NULL_HANDLE) {
+    if (!context_->InitializeAppSpace(frame_state.predictedDisplayTime)) {
+      loop_->Terminate();
+      return;
+    }
+  }
+
   XrFrameBeginInfo frame_begin_info{XR_TYPE_FRAME_BEGIN_INFO};
   IF_XR_FAILED (err, xrBeginFrame(context_->session(), &frame_begin_info)) {
     LOG_ERROR("%s", err.c_str());
