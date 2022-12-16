@@ -46,8 +46,6 @@ OpenXRContext::Init(struct android_app *app)
 
   LogReferenceSpaces();
 
-  if (!InitializeAppSpace()) return false;
-
   return true;
 }
 
@@ -277,12 +275,58 @@ OpenXRContext::InitializeSession()
 }
 
 bool
-OpenXRContext::InitializeAppSpace()
+OpenXRContext::InitializeAppSpace(XrTime time)
 {
   CHECK(session_ != XR_NULL_HANDLE);
 
-  glm::vec3 position(0, 0, 0);
-  glm::quat orientation(1, 0, 0, 0);
+  XrSpace stage_space = XR_NULL_HANDLE;
+  XrReferenceSpaceCreateInfo stage_space_create_info{
+      XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
+  stage_space_create_info.poseInReferenceSpace = Math::ToXrPosef(
+      glm::vec3(0), glm::quat_identity<float, glm::packed_highp>());
+  stage_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
+  IF_XR_FAILED (err, xrCreateReferenceSpace(
+                         session_, &stage_space_create_info, &stage_space)) {
+    LOG_ERROR("%s", err.c_str());
+    return false;
+  }
+
+  XrSpace view_space = XR_NULL_HANDLE;
+  XrReferenceSpaceCreateInfo view_space_create_info{
+      XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
+  view_space_create_info.poseInReferenceSpace = Math::ToXrPosef(
+      glm::vec3(0), glm::quat_identity<float, glm::packed_highp>());
+  view_space_create_info.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW;
+  IF_XR_FAILED (err,
+      xrCreateReferenceSpace(session_, &view_space_create_info, &view_space)) {
+    LOG_ERROR("%s", err.c_str());
+    xrDestroySpace(stage_space);
+    return false;
+  }
+
+  XrSpaceLocation view_location = {XR_TYPE_SPACE_LOCATION};
+  IF_XR_FAILED (err,
+      xrLocateSpace(view_space, stage_space, time, &view_location)) {
+    LOG_ERROR("%s", err.c_str());
+    xrDestroySpace(stage_space);
+    xrDestroySpace(view_space);
+    return false;
+  }
+
+  glm::vec3 position(
+      view_location.pose.position.x, 0, view_location.pose.position.z);
+  glm::quat orientation;
+
+  auto view_orientation = Math::ToGlm(view_location.pose.orientation);
+  glm::vec3 target(1, 0, 0);
+  target = view_orientation * target;
+  if (target.x == 0 && target.z == 0) {
+    orientation = glm::quat(1, 0, 0, 0);
+  } else {
+    auto yaw = atan2f(-target.z, target.x);
+    orientation = glm::quat(cosf(yaw / 2), 0, sinf(yaw / 2), 0);
+  }
+
   XrReferenceSpaceCreateInfo reference_space_create_info{
       XR_TYPE_REFERENCE_SPACE_CREATE_INFO};
   reference_space_create_info.poseInReferenceSpace =
@@ -293,8 +337,13 @@ OpenXRContext::InitializeAppSpace()
   IF_XR_FAILED (err, xrCreateReferenceSpace(
                          session_, &reference_space_create_info, &app_space_)) {
     LOG_ERROR("%s", err.c_str());
+    xrDestroySpace(stage_space);
+    xrDestroySpace(view_space);
     return false;
   }
+
+  xrDestroySpace(stage_space);
+  xrDestroySpace(view_space);
 
   return true;
 }
