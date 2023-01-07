@@ -55,9 +55,7 @@ struct OpenXRViewSource::Swapchain {
 struct OpenXRViewSource::SwapchainFramebuffer {
   ~SwapchainFramebuffer();
   GLuint framebuffer = 0;
-  GLuint color_texture = 0;
   GLuint depth_buffer = 0;
-  GLuint resolve_framebuffer = 0;
 };
 
 }  // namespace zen::display_system::oculus
