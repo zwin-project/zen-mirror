@@ -6,6 +6,8 @@
 
 namespace zen::display_system::oculus {
 
+constexpr float kRenderingScale = 2.f;
+
 OpenXRViewSource::~OpenXRViewSource()
 {
   for (auto swapchain : swapchains_) {
@@ -16,9 +18,7 @@ OpenXRViewSource::~OpenXRViewSource()
 OpenXRViewSource::SwapchainFramebuffer::~SwapchainFramebuffer()
 {
   if (framebuffer != 0) glDeleteFramebuffers(1, &framebuffer);
-  if (color_texture != 0) glDeleteTextures(1, &color_texture);
   if (depth_buffer != 0) glDeleteRenderbuffers(1, &depth_buffer);
-  if (resolve_framebuffer != 0) glDeleteFramebuffers(1, &resolve_framebuffer);
 }
 
 bool
@@ -124,18 +124,28 @@ OpenXRViewSource::Init()
   // Create a swapchain for each view
   for (uint32_t i = 0; i < view_count; i++) {
     auto &config_view = config_views[i];
+    uint32_t rendering_width =
+        config_view.recommendedImageRectWidth * kRenderingScale;
+    uint32_t rendering_height =
+        config_view.recommendedImageRectHeight * kRenderingScale;
+
+    if (rendering_width > config_view.maxImageRectWidth ||
+        rendering_height > config_view.maxImageRectHeight) {
+      rendering_width = config_view.recommendedImageRectWidth;
+      rendering_height = config_view.recommendedImageRectHeight;
+    }
+
     LOG_DEBUG(
         "Creating swapchain for view %d with dimensions Width=%d Height=%d "
         "SampleCount=%d",
-        i, config_view.recommendedImageRectWidth,
-        config_view.recommendedImageRectHeight,
+        i, rendering_width, rendering_height,
         config_view.recommendedSwapchainSampleCount);
 
     XrSwapchainCreateInfo swapchain_create_info{XR_TYPE_SWAPCHAIN_CREATE_INFO};
     swapchain_create_info.arraySize = 1;
     swapchain_create_info.format = color_swapchain_format;
-    swapchain_create_info.width = config_view.recommendedImageRectWidth;
-    swapchain_create_info.height = config_view.recommendedImageRectHeight;
+    swapchain_create_info.width = rendering_width;
+    swapchain_create_info.height = rendering_height;
     swapchain_create_info.mipCount = 1;
     swapchain_create_info.faceCount = 1;
     swapchain_create_info.sampleCount =
@@ -143,8 +153,8 @@ OpenXRViewSource::Init()
     swapchain_create_info.usageFlags = XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
 
     OpenXRViewSource::Swapchain swapchain;
-    swapchain.width = config_view.recommendedImageRectWidth;
-    swapchain.height = config_view.recommendedImageRectHeight;
+    swapchain.width = rendering_width;
+    swapchain.height = rendering_height;
     IF_XR_FAILED (err, xrCreateSwapchain(context_->session(),
                            &swapchain_create_info, &swapchain.handle)) {
       LOG_ERROR("%s", err.c_str());
@@ -172,45 +182,26 @@ OpenXRViewSource::Init()
     swapchain.framebuffers.resize(swapchain.images.size());
 
     for (uint i = 0; i < swapchain.images.size(); i++) {
-      GLuint framebuffer, resolve_framebuffer, color_texture, depth_buffer;
-
-      glGenFramebuffers(1, &resolve_framebuffer);
-      glBindFramebuffer(GL_FRAMEBUFFER, resolve_framebuffer);
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-          GL_TEXTURE_2D, swapchain.images[i].image, 0);
+      GLuint framebuffer, depth_buffer;
 
       glGenFramebuffers(1, &framebuffer);
       glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-      glGenTextures(1, &color_texture);
-      glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, color_texture);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4,
-          color_swapchain_format, swapchain.width, swapchain.height, GL_TRUE);
-
-      glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+      glFramebufferTexture(
+          GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, swapchain.images[i].image, 0);
 
       glGenRenderbuffers(1, &depth_buffer);
       glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
-      glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT24,
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F,
           swapchain.width, swapchain.height);
-
       glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-          GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0);
       glFramebufferRenderbuffer(
           GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer);
 
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
       swapchain.framebuffers[i].framebuffer = framebuffer;
-      swapchain.framebuffers[i].color_texture = color_texture;
       swapchain.framebuffers[i].depth_buffer = depth_buffer;
-      swapchain.framebuffers[i].resolve_framebuffer = resolve_framebuffer;
     }
 
     swapchains_.emplace_back(std::move(swapchain));
@@ -351,8 +342,6 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
 
     auto framebuffer =
         swapchain.framebuffers[swapchain_image_index].framebuffer;
-    auto resolve_framebuffer =
-        swapchain.framebuffers[swapchain_image_index].resolve_framebuffer;
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
@@ -375,13 +364,6 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
     remote_->Render(&camera);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolve_framebuffer);
-    glBlitFramebuffer(0, 0, swapchain.width, swapchain.height, 0, 0,
-        swapchain.width, swapchain.height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     XrSwapchainImageReleaseInfo release_info{
         XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO};
