@@ -18,7 +18,7 @@ android {
     ndkVersion getRequiredProperty("ndk.version")
 
     defaultConfig {
-        applicationId "io.zigen.zen.oculus_display_system"
+        applicationId "io.zigen.zen.mirror"
         minSdk 24
         targetSdk 29
         versionCode 1
