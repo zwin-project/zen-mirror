@@ -345,13 +345,12 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-    auto proj = Math::ToProjectionMatrix(views_[i].fov, 0.05, 1000.0);
+    auto projection = Math::ToProjectionMatrix(views_[i].fov, 0.05, 1000.0);
     auto position = Math::ToGlm(views_[i].pose.position);
     auto orientation = Math::ToGlm(views_[i].pose.orientation);
     auto view = glm::mat4(1.0);
     view = glm::translate(view, -position);
     view = glm::toMat4(glm::inverse(orientation)) * view;
-    auto vp = proj * view;
 
     glViewport(0, 0, swapchain.width, swapchain.height);
 
@@ -359,7 +358,8 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     zen::remote::client::Camera camera;
-    memcpy(&camera.vp, &vp, sizeof(vp));
+    memcpy(&camera.view, &view, sizeof(view));
+    memcpy(&camera.projection, &projection, sizeof(projection));
 
     remote_->Render(&camera);
 
