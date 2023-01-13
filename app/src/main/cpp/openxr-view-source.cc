@@ -354,7 +354,7 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
 
     glViewport(0, 0, swapchain.width, swapchain.height);
 
-    glClearColor(0.668f, 0.785f, 0.f, 1.f);  // Wakakusa (Japanese) color
+    glClearColor(17.f / 256.f, 31.f / 256.f, 77.f / 256.f, 1.f);  // Wakakusa (Japanese) color
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     zen::remote::client::Camera camera;
