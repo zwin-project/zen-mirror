@@ -39,7 +39,7 @@ jobs:
         run: |
           echo "ndk_version := $NDK_VERSION" > local.mk
           echo "ndk_dir     := /usr/local/lib/android/sdk/ndk/$NDK_VERSION" >> local.mk
-          make
+          make android
       
       - name: Checkout
         uses: actions/checkout@v2
