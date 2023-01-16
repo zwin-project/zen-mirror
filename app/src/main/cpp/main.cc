@@ -58,7 +58,6 @@ android_main(struct android_app *app)
 
     loop->Run();
 
-    app->activity->vm->DetachCurrentThread();
   } catch (const std::exception &e) {
     LOG_ERROR("%s", e.what());
   } catch (...) {
@@ -66,4 +65,5 @@ android_main(struct android_app *app)
   }
 
   LOG_INFO("%s Exit", config::APP_NAME);
+  app->activity->vm->DetachCurrentThread();
 }
