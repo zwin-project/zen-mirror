@@ -245,8 +245,7 @@ OpenXRViewSource::Process()
   XrCompositionLayerProjection layer{XR_TYPE_COMPOSITION_LAYER_PROJECTION};
   std::vector<XrCompositionLayerProjectionView> projection_layer_views;
   if (frame_state.shouldRender == XR_TRUE) {
-    if (RenderViews(
-            frame_state.predictedDisplayPeriod, projection_layer_views)) {
+    if (RenderViews(frame_state.predictedDisplayTime, projection_layer_views)) {
       layer.space = context_->app_space();
 
       if (context_->environment_blend_mode() ==
