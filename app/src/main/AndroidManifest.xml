@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="io.zwin.zen.oculus_display_system"
+    package="dev.zwin.zen.oculus_display_system"
     android:installLocation="auto"
     android:versionCode="1"
     android:versionName="0.1.0">
