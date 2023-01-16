@@ -18,29 +18,29 @@ jobs:
       - name: Clone Oculus OpenXR SDK
         uses: actions/checkout@v2
         with:
-          repository: zigen-project/oculus-openxr-mobile-sdk
+          repository: zwin-project/oculus-openxr-mobile-sdk
           path: ovr_openxr_mobile_sdk
-      
+
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install meson
-      
+
       - name: Clone grpc-dev
         uses: actions/checkout@v2
         with:
-          repository: zigen-project/grpc-dev
+          repository: zwin-project/grpc-dev
           path: grpc-dev
           submodules: recursive
-          ref: 'v1.49.1' 
-      
+          ref: "v1.49.1"
+
       - name: Build grpc-dev
         working-directory: ./grpc-dev
         run: |
           echo "ndk_version := $NDK_VERSION" > local.mk
           echo "ndk_dir     := /usr/local/lib/android/sdk/ndk/$NDK_VERSION" >> local.mk
           make android
-      
+
       - name: Checkout
         uses: actions/checkout@v2
         with:
