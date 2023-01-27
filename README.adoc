@@ -1,6 +1,6 @@
 == ZEN Oculus display system
 
-== Issue
+=== Issue
 
 Please report issues related to this repository to https://github.com/zwin-project/zen[zwin-project / zen].
 
