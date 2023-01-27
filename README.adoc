@@ -1,5 +1,9 @@
 == ZEN Oculus display system
 
+== Issue
+
+Please report issues related to this repository to https://github.com/zwin-project/zen[zwin-project / zen].
+
 === Clone
 
 Clone https://github.com/zwin-project/zen-oculus-display-system[this repository]
