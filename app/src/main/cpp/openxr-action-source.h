@@ -3,7 +3,7 @@
 #include "loop.h"
 #include "openxr-context.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 class OpenXRActionSource : public Loop::ISource {
  public:
@@ -29,4 +29,4 @@ class OpenXRActionSource : public Loop::ISource {
   std::array<XrPath, (size_t)Hand::kCount> hand_subaction_path_;
 };
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

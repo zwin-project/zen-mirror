@@ -10,7 +10,7 @@
 #include "remote-log-sink.h"
 #include "remote-loop.h"
 
-using namespace zen::display_system::oculus;
+using namespace zen::mirror;
 
 void
 android_main(struct android_app *app)

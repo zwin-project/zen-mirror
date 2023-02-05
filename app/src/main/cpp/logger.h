@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 struct ILogger {
   // logger singleton set by InitializeLogger;
@@ -36,7 +36,7 @@ struct ILogger {
   }
 };
 
-constexpr char kDefaultLoggerTag[] = "ZEN[Oculus]";
+constexpr char kDefaultLoggerTag[] = "ZEN[Mirror]";
 
 #define LOG_DEBUG(format, ...)                                \
   ILogger::instance->Print(ILogger::DEBUG, kDefaultLoggerTag, \
@@ -60,4 +60,4 @@ constexpr char kDefaultLoggerTag[] = "ZEN[Oculus]";
 
 void InitializeLogger();
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

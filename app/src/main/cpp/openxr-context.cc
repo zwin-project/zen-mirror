@@ -6,7 +6,7 @@
 #include "openxr-context.h"
 #include "openxr-util.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 OpenXRContext::~OpenXRContext()
 {
@@ -587,4 +587,4 @@ OpenXRContext::LogLayersAndExtensions() const
   }
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

@@ -3,7 +3,7 @@
 #include "loop.h"
 #include "openxr-context.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 class OpenXRViewSource : public Loop::ISource {
  public:
@@ -58,4 +58,4 @@ struct OpenXRViewSource::SwapchainFramebuffer {
   GLuint depth_buffer = 0;
 };
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

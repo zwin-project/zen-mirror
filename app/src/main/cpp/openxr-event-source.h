@@ -4,7 +4,7 @@
 #include "loop.h"
 #include "openxr-context.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 class OpenXREventSource : public Loop::ISource {
  public:
@@ -29,4 +29,4 @@ class OpenXREventSource : public Loop::ISource {
   std::shared_ptr<Loop> loop_;
 };
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

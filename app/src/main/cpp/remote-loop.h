@@ -2,7 +2,7 @@
 
 #include "loop.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 class RemoteLoop : public remote::ILoop {
  public:
@@ -18,4 +18,4 @@ class RemoteLoop : public remote::ILoop {
   std::shared_ptr<Loop> main_loop_;
 };
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

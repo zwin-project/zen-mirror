@@ -1,4 +1,4 @@
-== ZEN Oculus display system
+== ZEN Mirror
 
 === Issue
 
@@ -6,12 +6,12 @@ Please report issues related to this repository to https://github.com/zwin-proje
 
 === Clone
 
-Clone https://github.com/zwin-project/zen-oculus-display-system[this repository]
+Clone https://github.com/zwin-project/zen-mirror[this repository]
 with its submodules as well.
 
 [source,sh]
 ```
-git clone https://github.com/zwin-project/zen-oculus-display-system.git --recursive
+git clone https://github.com/zwin-project/zen-mirror.git --recursive
 ```
 
 === Basic environment setup

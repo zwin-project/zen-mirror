@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 class Loop {
  public:
@@ -37,4 +37,4 @@ struct Loop::ISource {
   virtual void Process() = 0;
 };
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

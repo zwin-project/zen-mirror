@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(zen_oculus_display_system C CXX)
+project(zen_mirror C CXX)
 message(STATUS "Using CMake version: ${CMAKE_VERSION}")
 
 set(CMAKE_CXX_STANDARD 17)
@@ -73,7 +73,7 @@ set_property(
 
 # main target
 add_library(
-  zen_oculus_display_system MODULE
+  zen_mirror MODULE
   
   android-logger.cc
   egl-instance.cc
@@ -87,10 +87,10 @@ add_library(
   remote-loop.cc
   $<TARGET_OBJECTS:android_native_app_glue_object>
 )
-target_precompile_headers(zen_oculus_display_system PRIVATE pch.h)
+target_precompile_headers(zen_mirror PRIVATE pch.h)
 
 target_link_libraries(
-  zen_oculus_display_system
+  zen_mirror
 
   PRIVATE
     glm
@@ -103,7 +103,7 @@ target_link_libraries(
 )
 
 target_include_directories(
-  zen_oculus_display_system
+  zen_mirror
 
   PRIVATE
     ${openxr_sdk_content_SOURCE_DIR}/include
@@ -112,7 +112,7 @@ target_include_directories(
 )
 
 target_compile_options(
-  zen_oculus_display_system
+  zen_mirror
 
   PRIVATE
     -Werror -Wall -Winvalid-pch -Wextra -Wpedantic
