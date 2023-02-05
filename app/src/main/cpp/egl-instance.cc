@@ -3,7 +3,7 @@
 #include "egl-instance.h"
 #include "logger.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 namespace {
 
@@ -171,4 +171,4 @@ EglInstance::Initialize()
   return true;
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

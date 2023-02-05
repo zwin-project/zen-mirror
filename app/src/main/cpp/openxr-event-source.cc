@@ -5,7 +5,7 @@
 #include "openxr-event-source.h"
 #include "openxr-util.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 void
 OpenXREventSource::Process()
@@ -65,4 +65,4 @@ OpenXREventSource::HandleSessionStateChangedEvent(
   context_->UpdateSessionState(event->state, event->time);
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

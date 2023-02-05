@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="dev.zwin.zen.oculus_display_system"
+    package="dev.zwin.zen.mirror"
     android:installLocation="auto"
     android:versionCode="1"
     android:versionName="0.1.0">
@@ -50,7 +50,7 @@
 
             <meta-data
                 android:name="android.app.lib_name"
-                android:value="zen_oculus_display_system" />
+                android:value="zen_mirror" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

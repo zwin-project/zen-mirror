@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 class EglInstance {
  public:
@@ -41,4 +41,4 @@ EglInstance::context()
   return context_;
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

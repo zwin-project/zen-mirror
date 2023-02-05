@@ -1,6 +1,6 @@
 #pragma once
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 namespace {
 
@@ -118,4 +118,4 @@ ToProjectionMatrix(XrFovf fov, float near, float far)
 
 }  // namespace
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

@@ -4,7 +4,7 @@
 #include "openxr-action-source.h"
 #include "openxr-util.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 OpenXRActionSource::~OpenXRActionSource()
 {
@@ -208,4 +208,4 @@ OpenXRActionSource::Process()
   }
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

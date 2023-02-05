@@ -4,7 +4,7 @@
 #include "openxr-util.h"
 #include "openxr-view-source.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 constexpr float kRenderingScale = 2.f;
 
@@ -377,4 +377,4 @@ OpenXRViewSource::RenderViews(XrTime predict_display_time,
   return true;
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

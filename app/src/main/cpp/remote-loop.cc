@@ -3,7 +3,7 @@
 #include "logger.h"
 #include "remote-loop.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 namespace {
 
@@ -77,4 +77,4 @@ RemoteLoop::Terminate()
   main_loop_->Terminate();
 };
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

@@ -2,7 +2,7 @@
 
 #include "remote-log-sink.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 void
 RemoteLogSink::Sink(remote::Severity remote_severity,
@@ -34,4 +34,4 @@ RemoteLogSink::Sink(remote::Severity remote_severity,
       severity, "ZEN[Remote]", pretty_function, file, line, format, vp);
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

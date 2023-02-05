@@ -3,7 +3,7 @@
 #include "logger.h"
 #include "loop.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 void
 Loop::Run()
@@ -73,4 +73,4 @@ Loop::HandleAndroidPollEvent(int result, void *data)
   return false;
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

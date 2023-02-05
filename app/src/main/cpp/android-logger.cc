@@ -2,7 +2,7 @@
 
 #include "logger.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 namespace {
 
@@ -46,4 +46,4 @@ InitializeLogger()
   ILogger::instance = std::make_unique<AndroidLogger>();
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror

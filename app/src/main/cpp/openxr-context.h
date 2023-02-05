@@ -4,7 +4,7 @@
 #include "egl-instance.h"
 #include "loop.h"
 
-namespace zen::display_system::oculus {
+namespace zen::mirror {
 
 class OpenXRContext {
  public:
@@ -129,4 +129,4 @@ OpenXRContext::environment_blend_mode()
   return environment_blend_mode_;
 }
 
-}  // namespace zen::display_system::oculus
+}  // namespace zen::mirror
