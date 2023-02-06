@@ -1,0 +1,140 @@
+= Build Zen Mirror from source
+
+== About NDK version
+
+Use the same NDK version for https://github.com/zwin-project/grpc-dev[grpc-dev] and this repository.
+The recommended NDK version is `21.4.7075529` or higher.
+
+In the following, the NDK version is denoted as `$NDK_VERSION`.
+
+== Basic environment setup
+
+This project is an Android project using the OpenXR Mobile SDK provided by Meta.
+This section describes how to set up a basic development environment. 
+
+=== Device setup
+
+We need to enable developer mode for the Meta Quest 2 / Pro.
+Please follow the instructions from Meta below.
+
+https://developer.oculus.com/documentation/native/android/mobile-device-setup/[Device Setup]
+
+=== Android development software setup
+
+We have several options for setting up the Android development environment.
+Here we will set up the Android development environment using Android Studio.
+
+To get started, download https://developer.android.com/studio/index.html[Android Studio].
+For detailed installation steps, refer to the
+https://developer.android.com/studio/install.html?pkg=studio#linux[Install Andrdoid Studio] guide.
+
+==== Install additional packages and tools
+
+After installing Android Studio, you can install the following packages:
+
+* Android SDK Platform, API level 26 (Android 8.0 Oreo).
+* Android SDK Build Tools, v28.0.3 or later.
+* Android NDK, version `$NDK_VERSION` (see <<About NDK version>>).
+
+These packages are installed through the Android SDK Manager.
+To access the manager:
+
+1. Open Android Studio.
+2. Look for the "SDK Manager" icon
+( image:figure/sdk-manager.png["SDK Manager Icon", 30, 30, title="SDK Manager Icon"] ).
+You can typically find it in the following locations.
+* The "More Actions" button on the "Welcome to Android Studio" page.
+* The three vertical dots icon in the upper right corner of the "Welcome to Android Studio" page.
+* The "Tools" button in the menu at the top of the editor page.
+
+To select the detailed version, check the "Show Package Details" checkbox.
+
+==== Check the Android SDK location
+
+You can check the Android SDK location in the Android SDK Manager.
+It's usually `$HOME/Android/Sdk`, or similar.
+In the following, the SDK location is denoted as `$SDK_DIR`.
+
+==== Check the Android NDK location
+
+The NDK location is `$SDK_DIR/ndk/$NDK_VERSION`.
+In the following, the NDK location is denoted as `$NDK_DIR`.
+
+==== Set environment variables
+
+Set the environment variable `JAVA_HOME` to the JDK location.
+It's typically `(/usr/local|/opt)/android-studio/(jre|jbr)`.
+
+Add the JDK tools directory to your `PATH`, typically `$JAVA_HOME/bin`.
+
+=== Download OpenXR SDK
+
+Download the Oculus OpenXR Mobile SDK (v42.0) from
+https://developer.oculus.com/downloads/package/oculus-openxr-mobile-sdk/42.0/[here],
+and unzip it to a location of your choice.
+
+== Build gRPC
+
+Clone and build https://github.com/zwin-project/grpc-dev[grpc-dev]
+using the v1.49.1 branch.
+The following assumes you have cloned it to `$MY_DIR/grpc-dev`.
+
+See the README of https://github.com/zwin-project/grpc-dev[grpc-dev] for build instructions.
+Please build for both Android and host OS.
+
+== Build Zen Mirror
+
+=== Clone
+
+Clone https://github.com/zwin-project/zen-mirror[this repository]
+with its *submodules* as well.
+
+[source,sh]
+----
+$ git clone https://github.com/zwin-project/zen-mirror.git --recursive
+----
+
+=== Configure `local.properties`
+
+Place a file named `local.properties` in the root directories of this project
+and set the following items.
+
+* `sdk.dir`: Absolute path to `$SDK_DIR`.
+* `ndk.version`: `$NDK_VERSION`.
+* `ovr_openxr_mobile_sdk.dir`: Absolute path to the Oculus OpenXR Mobile SDK directory.
+* `protoc`: Absolute path to `$MY_DIR/grpc-dev/native/Debug/bin/protoc`.
+* `grpc_cpp_plugin`: Absolute path to `$MY_DIR/grpc-dev/native/Debug/bin/grpc_cpp_plugin`.
+* `grpc_sysroot`: Absolute path to `$MY_DRI/grpc-dev/android/24/arm64-v8a/$NDK_VERSION/Debug`.
+* `cmake.dir`: (optional) Absolute Path to CMake directory you want to use.
+
+[source,property,title="local.properties"]
+----
+sdk.dir = /path/to/Android/sdk
+ndk.version = 21.4.7075529
+ovr_openxr_mobile_sdk.dir = /path/to/ovr_openxr_mobile_sdk_42.0
+
+protoc          = /path/to/grpc-dev/native/Debug/bin/protoc
+grpc_cpp_plugin = /path/to/grpc-dev/native/Debug/bin/grpc_cpp_plugin
+grpc_sysroot    = /path/to/grpc-dev/android/24/arm64-v8a/21.4.7075529/Debug
+
+cmake.dir = /path/to/Android/sdk/cmake/3.22.1
+----
+
+=== Build
+
+[source,sh]
+----
+$ ./gradlew build
+----
+
+=== Install to Quest
+
+[source,sh]
+----
+$ ./gradlew installDebug
+----
+
+If the installation failed,
+
+* make sure your Quest is connected to the PC and authorized. (See also <<Device setup>>)
+* uninstall the Zen Mirror already installed on your Quest.

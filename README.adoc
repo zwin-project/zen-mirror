@@ -1,70 +1,19 @@
-== ZEN Mirror
+= Zen Mirror
 
-=== Issue
+== Issue
 
 Please report issues related to this repository to https://github.com/zwin-project/zen[zwin-project / zen].
 
-=== Clone
+== Try it out
+If you want to try out Zen, you can follow
+https://www.zwin.dev/getting_started/system_requirements[our installation guides].
 
-Clone https://github.com/zwin-project/zen-mirror[this repository]
-with its submodules as well.
+== Download APK file
 
-[source,sh]
-```
-git clone https://github.com/zwin-project/zen-mirror.git --recursive
-```
+You can download Zen Mirror APK from
+https://github.com/zwin-project/zen-mirror/releases[GitHub Releases].
 
-=== Basic environment setup
+== Contributing
 
-This project is an Android project using the OpenXR Mobile SDK provided by
-Oculus. Follow the developer documentation for Oculus' OpenXR Mobile SDK to set
-up a basic environment.
-
-This will likely include,
-
-* Setting up Oculus Quest/Quest2 in developer mode.
-* Development environment for Android projects.
-* Download Oculus OpenXR Mobile SDK package
-
-=== Build gRPC
-
-Clone and build https://github.com/zwin-project/grpc-dev[grpc-dev],
-using the v1.49.1 branch. We assume that you clone it to `$MY_DIR/grpc-dev`.
-
-NDK version `21.4.7075529` is recommended.
-It should match the `ndk.version` described below.
-
-If you have already built `grpc-dev`, this is not required.
-
-=== Configuration files
-
-Place a file named `local.properties` in the root directories of this project
-and set the following items.
-
-* `sdk.dir`: Path to the Android SDK directory
-* `ndk.version`: NDK Version (ex 21.4.7075529)
-* `ovr_openxr_mobile_sdk.dir`: Path to the Oculus OpenXR Mobile SDK directory
-* The following three values are used to build zen-remote.
-Please refer to the https://github.com/zwin-project/zen-remote[zen-remote] for details.
-** `protoc`: Path to `$MY_DIR/grpc-dev/native/Debug/bin/protoc`
-** `grpc_cpp_plugin`: Path to `$MY_DIR/grpc-dev/native/Debug/bin/grpc_cpp_plugin`
-** `grpc_sysroot`: Path to `$MY_DRI/grpc-dev/android/24/arm64-v8a/21.4.7075529/Debug` +
-Change the NDK Version (21.4.7075529) if necessary.
-* `cmake.dir`: (optional) Path to CMake direcory you want to use
-
-[source,property,title="local.properties"]
-----
-sdk.dir = /path/to/Android/sdk
-ndk.version = 21.4.7075529
-ovr_openxr_mobile_sdk.dir = /path/to/ovr_openxr_mobile_sdk_42.0
-
-protoc          = /path/to/grpc-dev/native/Debug/bin/protoc
-grpc_cpp_plugin = /path/to/grpc-dev/native/Debug/bin/grpc_cpp_plugin
-grpc_sysroot    = /path/to/grpc-dev/android/24/arm64-v8a/21.4.7075529/Debug
-
-cmake.dir = /path/to/Android/sdk/cmake/3.22.1
-----
-
-=== Build & Run
-
-Use Android Studio to build and run, or do as you like.
+* link:./doc/BUILD.adoc[BUILD.adoc] +
+Guide to building Zen Mirror from source.
