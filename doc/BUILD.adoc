@@ -33,8 +33,10 @@ https://developer.android.com/studio/install.html?pkg=studio#linux[Install Andrd
 After installing Android Studio, you can install the following packages:
 
 * Android SDK Platform, API level 26 (Android 8.0 Oreo).
-* Android SDK Build Tools, v28.0.3 or later.
+* Android SDK Build Tools, v28.0.3 or higher.
 * Android NDK, version `$NDK_VERSION` (see <<About NDK version>>).
+* Android CMake, v3.19 or higher. +
+In the following, the CMake version is denoted as `$CMAKE_VERSION`.
 
 These packages are installed through the Android SDK Manager.
 To access the manager:
@@ -105,7 +107,7 @@ and set the following items.
 * `protoc`: Absolute path to `$MY_DIR/grpc-dev/native/Debug/bin/protoc`.
 * `grpc_cpp_plugin`: Absolute path to `$MY_DIR/grpc-dev/native/Debug/bin/grpc_cpp_plugin`.
 * `grpc_sysroot`: Absolute path to `$MY_DRI/grpc-dev/android/24/arm64-v8a/$NDK_VERSION/Debug`.
-* `cmake.dir`: (optional) Absolute Path to CMake directory you want to use.
+* `cmake.dir`: Absolute path to `$SDK_DIR/cmake/$CMAKE_VERSION`.
 
 [source,property,title="local.properties"]
 ----
