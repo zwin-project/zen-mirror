@@ -64,6 +64,8 @@ OpenXRViewSource::Init()
     }
 
     config_views.resize(view_count);
+    std::fill(config_views.begin(), config_views.end(),
+              XrViewConfigurationView{XR_TYPE_VIEW_CONFIGURATION_VIEW});
 
     IF_XR_FAILED (err,
         xrEnumerateViewConfigurationViews(context_->instance(),
