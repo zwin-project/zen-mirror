@@ -17,7 +17,6 @@
 #include <stdarg.h>
 #include <string>
 #include <vector>
-#include <algorithm>
 #include <zen-remote/client/remote.h>
 #include <zen-remote/logger.h>
 #include <zen-remote/loop.h>
